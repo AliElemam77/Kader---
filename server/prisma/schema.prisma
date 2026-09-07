@@ -1,0 +1,128 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  HR_MANAGER
+  RECRUITER
+}
+
+enum UserStatus {
+  INVITED
+  ACTIVE
+  DEACTIVATED
+}
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+  CLOSED
+}
+
+enum CandidateStatus {
+  PENDING
+  IN_PROGRESS
+  REJECTED
+  HIRED
+}
+
+model User {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  name              String
+  role              Role               @default(RECRUITER)
+  status            UserStatus         @default(INVITED)
+
+  jobsCreated       Job[]              @relation("JobCreator")
+  verificationCodes VerificationCode[]
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model VerificationCode {
+  id        String   @id @default(uuid())
+  email     String
+  code      String   // 6-digit OTP code (e.g. "492015")
+  token     String   @unique // Cryptographic random string for 1-click Magic Link
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([code])
+  @@index([token])
+  @@map("verification_codes")
+}
+
+model Job {
+  id              String          @id @default(uuid())
+  title           String
+  slug            String          @unique
+  department      String?
+  location        String?
+  employmentType  String?
+  description     String          @db.Text
+  status          JobStatus       @default(DRAFT)
+
+  /// Dynamic application form configuration defined by HR.
+  formFields      Json            @default("[]")
+
+  /// Custom hiring pipeline stages for this job.
+  pipelineStages  Json            @default("[]")
+
+  createdById     String?
+  createdBy       User?           @relation("JobCreator", fields: [createdById], references: [id])
+
+  candidates      Candidate[]
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([createdById])
+  @@map("jobs")
+}
+
+model Candidate {
+  id               String           @id @default(uuid())
+  jobId            String
+  job              Job              @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  name             String
+  email            String
+  phone            String?
+  resumeUrl        String?
+
+  /// Dynamic answers submitted matching Job.formFields
+  applicantData    Json             @default("{}")
+
+  /// Active stage ID from Job.pipelineStages
+  currentStage     String
+
+  status           CandidateStatus  @default(PENDING)
+  rejectionReason  String?          @db.Text
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([jobId])
+  @@index([email])
+  @@index([currentStage])
+  @@index([status])
+  @@map("candidates")
+}

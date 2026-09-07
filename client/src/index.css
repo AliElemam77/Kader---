@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #070A14;
+  --color-deep: #0E1524;
+  --color-raise: #151E31;
+  --color-line: rgba(255, 255, 255, 0.09);
+  --color-slate-kader: #5A6478;
+  --color-signal: #4C8DFF;
+  --color-amber-kader: #F5B23D;
+  --color-mint: #35D6A4;
+  --color-rose-kader: #FF7A85;
+  --color-cloud: #EEF1F7;
+  --color-muted-kader: #8892A6;
+}
+
+:root {
+  --ink: #070A14;
+  --deep: #0E1524;
+  --raise: #151E31;
+  --line: rgba(255, 255, 255, 0.09);
+  --slate: #5A6478;
+  --signal: #4C8DFF;
+  --amber: #F5B23D;
+  --mint: #35D6A4;
+  --rose: #FF7A85;
+  --cloud: #EEF1F7;
+  --muted: #8892A6;
+  --m1: var(--slate);
+  --m2: var(--signal);
+  --m3: var(--amber);
+  --ar: "IBM Plex Sans Arabic", "Tajawal", system-ui, sans-serif;
+  --en: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* Typography per direction according to Kader Brand Book */
+html[dir="rtl"], html[lang="ar"] {
+  font-family: var(--ar);
+}
+
+html[dir="ltr"], html[lang="en"] {
+  font-family: var(--en);
+}
+
+body {
+  margin: 0;
+  background-color: var(--ink);
+  color: var(--cloud);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(50% 60% at 50% 0%, rgba(76, 141, 255, 0.08) 0%, rgba(7, 10, 20, 0) 70%),
+    radial-gradient(circle at 90% 90%, rgba(245, 178, 61, 0.04) 0%, transparent 50%);
+}
+
+/* Monospace data elements (Code, IDs, verification tokens, counts) */
+.font-mono, code, .code-token {
+  font-family: var(--mono) !important;
+}
+
+/* Action Hierarchy Buttons (Kader Brand Book) */
+.btn-pri {
+  background-color: var(--amber);
+  color: #1A1204;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-pri:hover {
+  background-color: #e0a233;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 178, 61, 0.25);
+}
+.btn-pri:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-sec {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: var(--cloud);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-sec:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.btn-sec:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background-color: rgba(255, 122, 133, 0.12);
+  color: var(--rose);
+  border: 1px solid rgba(255, 122, 133, 0.3);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-danger:hover {
+  background-color: rgba(255, 122, 133, 0.2);
+  border-color: rgba(255, 122, 133, 0.5);
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: var(--ink);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--raise);
+  border-radius: 9999px;
+  border: 1px solid var(--line);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #232d44;
+}
