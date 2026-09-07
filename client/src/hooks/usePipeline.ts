@@ -81,6 +81,10 @@ export function usePipeline(token: string | null) {
   const [deletingCandidate, setDeletingCandidate] = useState<Candidate | null>(null);
   const [isDeletingCandidate, setIsDeletingCandidate] = useState<boolean>(false);
 
+  // Delete Job Modal State
+  const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
+  const [isDeletingJob, setIsDeletingJob] = useState<boolean>(false);
+
   // State for Edit Stage Form
   const [editName, setEditName] = useState('');
   const [editIsInterview, setEditIsInterview] = useState(true);
@@ -673,6 +677,39 @@ export function usePipeline(token: string | null) {
     setSchedulingCandidate(null);
   };
 
+  const handleConfirmDeleteJob = async () => {
+    if (!jobToDelete) return;
+    setIsDeletingJob(true);
+    const toastId = toast.loading(`Deleting job "${jobToDelete.title}"...`);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/jobs/${jobToDelete.id}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const resJson = await res.json();
+
+      if (resJson.success) {
+        toast.success(`Job "${jobToDelete.title}" deleted successfully!`, { id: toastId });
+        localStorage.removeItem('ats_selected_job_id');
+        setJobToDelete(null);
+
+        const remaining = jobs.filter((j) => j.id !== jobToDelete.id);
+        if (remaining.length > 0) {
+          fetchData(remaining[0].id);
+        } else {
+          fetchData();
+        }
+      } else {
+        toast.error(resJson.message || 'Failed to delete job', { id: toastId });
+      }
+    } catch {
+      toast.error('Network error while deleting job position', { id: toastId });
+    } finally {
+      setIsDeletingJob(false);
+    }
+  };
+
   const selectedJob = jobs.find((j) => j.id === selectedJobId) || jobs[0];
 
   return {
@@ -736,6 +773,10 @@ export function usePipeline(token: string | null) {
     setDeletingCandidate,
     isDeletingCandidate,
     handleConfirmDeleteCandidate,
+    jobToDelete,
+    setJobToDelete,
+    isDeletingJob,
+    handleConfirmDeleteJob,
     selectedCandidate,
     setSelectedCandidate,
   };

@@ -1,9 +1,11 @@
-import { type FC } from 'react';
+import { useState, type FC } from 'react';
 import { Loader2 } from 'lucide-react';
+import type { Job } from '../types/ats';
 import { useCareers } from '../hooks/useCareers';
 import { CareersHero } from './careers/CareersHero';
 import { PublicJobCard } from './careers/PublicJobCard';
 import { JobApplicationModal } from './careers/JobApplicationModal';
+import { JobDetailModal } from './jobs/JobDetailModal';
 
 export const PublicCareers: FC = () => {
   const {
@@ -17,6 +19,8 @@ export const PublicCareers: FC = () => {
     fetchingJobId,
     handleOpenApply,
   } = useCareers();
+
+  const [jobForDetails, setJobForDetails] = useState<Job | null>(null);
 
   return (
     <div className="space-y-10">
@@ -41,12 +45,24 @@ export const PublicCareers: FC = () => {
               job={job}
               isOpening={fetchingJobId === job.id}
               onApply={handleOpenApply}
+              onViewDetails={(j) => setJobForDetails(j)}
             />
           ))}
         </div>
       )}
 
-      {/* 3. Modal: Dynamic Job Application Form */}
+      {/* 3. Modal: Job Details (Public View with Apply CTA) */}
+      <JobDetailModal
+        job={jobForDetails}
+        isOpen={Boolean(jobForDetails)}
+        onClose={() => setJobForDetails(null)}
+        onApply={(j) => {
+          setJobForDetails(null);
+          handleOpenApply(j);
+        }}
+      />
+
+      {/* 4. Modal: Dynamic Job Application Form */}
       {selectedJob && (
         <JobApplicationModal
           job={selectedJob}

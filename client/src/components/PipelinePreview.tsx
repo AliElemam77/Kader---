@@ -1,8 +1,10 @@
-import type { FC } from 'react';
+import { useState, type FC } from 'react';
 import { usePipeline } from '../hooks/usePipeline';
 import { PipelineHeader } from './pipeline/PipelineHeader';
 import { PipelineKanbanBoard } from './pipeline/PipelineKanbanBoard';
 import { PipelineModals } from './pipeline/PipelineModals';
+import { DeleteJobModal } from './jobs/DeleteJobModal';
+import { JobDetailModal } from './jobs/JobDetailModal';
 
 interface PipelinePreviewProps {
   token: string | null;
@@ -72,7 +74,13 @@ export const PipelinePreview: FC<PipelinePreviewProps> = ({ token }) => {
     setDeletingCandidate,
     isDeletingCandidate,
     handleConfirmDeleteCandidate,
+    jobToDelete,
+    setJobToDelete,
+    isDeletingJob,
+    handleConfirmDeleteJob,
   } = usePipeline(token);
+
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -85,6 +93,8 @@ export const PipelinePreview: FC<PipelinePreviewProps> = ({ token }) => {
         onSelectJob={handleSelectJob}
         onRefresh={() => fetchData()}
         onOpenAddStage={() => setIsAddStageOpen(true)}
+        onViewJobDetails={() => setIsJobDetailsOpen(true)}
+        onDeleteJob={() => selectedJob && setJobToDelete(selectedJob)}
       />
 
       {/* 2. Kanban Board Columns */}
@@ -161,6 +171,26 @@ export const PipelinePreview: FC<PipelinePreviewProps> = ({ token }) => {
         onConfirmDeleteCandidate={handleConfirmDeleteCandidate}
         onOpenDeleteCandidate={setDeletingCandidate}
         onUnrejectCandidate={handleUnrejectCandidate}
+      />
+
+      {/* 4. Job Details Modal */}
+      <JobDetailModal
+        job={selectedJob || null}
+        isOpen={isJobDetailsOpen}
+        onClose={() => setIsJobDetailsOpen(false)}
+        onDeleteClick={(j) => {
+          setIsJobDetailsOpen(false);
+          setJobToDelete(j);
+        }}
+      />
+
+      {/* 5. Delete Job Modal */}
+      <DeleteJobModal
+        job={jobToDelete}
+        isOpen={Boolean(jobToDelete)}
+        isLoading={isDeletingJob}
+        onClose={() => setJobToDelete(null)}
+        onConfirm={handleConfirmDeleteJob}
       />
     </div>
   );

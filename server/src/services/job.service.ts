@@ -170,4 +170,16 @@ export class JobService {
       data: { formFields },
     });
   }
+
+  // Delete job and all its related candidates (cascade)
+  static async deleteJob(jobId: string) {
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    if (!job) {
+      throw new Error('Job position not found');
+    }
+
+    return prisma.job.delete({
+      where: { id: jobId },
+    });
+  }
 }

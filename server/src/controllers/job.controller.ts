@@ -104,4 +104,15 @@ export class JobController {
       sendError(res, (error as Error).message, 400);
     }
   }
+
+  // Delete job position
+  static async deleteJob(req: Request, res: Response): Promise<void> {
+    try {
+      const id = String(req.params.id);
+      await JobService.deleteJob(id);
+      sendSuccess(res, null, 'Job position and related records deleted successfully');
+    } catch (error) {
+      sendError(res, (error as Error).message, 400);
+    }
+  }
 }

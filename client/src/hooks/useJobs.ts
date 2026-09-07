@@ -80,6 +80,43 @@ export function useJobs(onNavigate?: (tab: 'pipeline' | 'builder', jobId: string
     }
   };
 
+  const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  const confirmDeleteJob = async () => {
+    if (!jobToDelete) return;
+    setIsDeleting(true);
+    const toastId = toast.loading(`Deleting job "${jobToDelete.title}"...`);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/jobs/${jobToDelete.id}`, {
+        method: 'DELETE',
+      });
+      const resJson = await res.json();
+
+      if (resJson.success) {
+        toast.success(`Job "${jobToDelete.title}" deleted successfully!`, { id: toastId });
+
+        // If the deleted job was selected in localStorage, clear it
+        if (localStorage.getItem('ats_selected_job_id') === jobToDelete.id) {
+          localStorage.removeItem('ats_selected_job_id');
+        }
+        if (localStorage.getItem('ats_builder_job_id') === jobToDelete.id) {
+          localStorage.removeItem('ats_builder_job_id');
+        }
+
+        setJobToDelete(null);
+        fetchJobs();
+      } else {
+        toast.error(resJson.message || 'Failed to delete job', { id: toastId });
+      }
+    } catch {
+      toast.error('Network error while deleting job position', { id: toastId });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleOpenPipeline = (jobId: string) => {
     localStorage.setItem('ats_selected_job_id', jobId);
     if (onNavigate) {
@@ -106,6 +143,10 @@ export function useJobs(onNavigate?: (tab: 'pipeline' | 'builder', jobId: string
     createJobForm,
     fetchJobs,
     onCreateJob,
+    jobToDelete,
+    setJobToDelete,
+    isDeleting,
+    confirmDeleteJob,
     handleOpenPipeline,
     handleOpenBuilder,
   };

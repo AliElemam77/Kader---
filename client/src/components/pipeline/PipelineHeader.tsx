@@ -1,5 +1,5 @@
 import { type FC } from 'react';
-import { Sparkles, RefreshCw, Plus } from 'lucide-react';
+import { Sparkles, RefreshCw, Plus, Trash2, Eye } from 'lucide-react';
 import type { Job } from '../../types/ats';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -11,6 +11,8 @@ interface PipelineHeaderProps {
   onSelectJob: (jobId: string) => void;
   onRefresh: () => void;
   onOpenAddStage: () => void;
+  onViewJobDetails?: () => void;
+  onDeleteJob?: () => void;
 }
 
 export const PipelineHeader: FC<PipelineHeaderProps> = ({
@@ -21,16 +23,30 @@ export const PipelineHeader: FC<PipelineHeaderProps> = ({
   onSelectJob,
   onRefresh,
   onOpenAddStage,
+  onViewJobDetails,
+  onDeleteJob,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#0E1524] border border-white/[0.08] rounded-2xl p-6 shadow-xl">
       <div className="space-y-1.5">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-[#EEF1F7] tracking-tight">
-            {selectedJob ? selectedJob.title : t('nav.pipeline')}
-          </h2>
+          {selectedJob && onViewJobDetails ? (
+            <button
+              type="button"
+              onClick={onViewJobDetails}
+              className="group flex items-center gap-2 text-xl font-bold text-[#EEF1F7] tracking-tight hover:text-[#F5B23D] transition-colors cursor-pointer text-start"
+              title={language === 'ar' ? 'عرض تفاصيل الوظيفة' : 'View Job Details'}
+            >
+              <span>{selectedJob.title}</span>
+              <Eye size={16} className="text-[#8892A6] group-hover:text-[#F5B23D] transition-colors" />
+            </button>
+          ) : (
+            <h2 className="text-xl font-bold text-[#EEF1F7] tracking-tight">
+              {selectedJob ? selectedJob.title : t('nav.pipeline')}
+            </h2>
+          )}
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#35D6A4]/10 text-[#35D6A4] border border-[#35D6A4]/20">
             <Sparkles size={11} /> {t('common.online')}
           </span>
@@ -58,6 +74,17 @@ export const PipelineHeader: FC<PipelineHeaderProps> = ({
           </select>
         )}
 
+        {onViewJobDetails && selectedJob && (
+          <button
+            onClick={onViewJobDetails}
+            title={language === 'ar' ? 'تفاصيل الوظيفة' : 'View Job Details'}
+            className="p-2.5 rounded-xl bg-[#151E31] hover:bg-[#1d2942] text-[#8892A6] hover:text-[#F5B23D] border border-white/[0.08] transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+          >
+            <Eye size={14} />
+            <span className="hidden sm:inline">{language === 'ar' ? 'التفاصيل' : 'Details'}</span>
+          </button>
+        )}
+
         <button
           onClick={onRefresh}
           title={t('pipeline.refresh')}
@@ -65,6 +92,16 @@ export const PipelineHeader: FC<PipelineHeaderProps> = ({
         >
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
         </button>
+
+        {onDeleteJob && selectedJob && (
+          <button
+            onClick={onDeleteJob}
+            title={language === 'ar' ? 'حذف هذه الوظيفة' : 'Delete this job position'}
+            className="p-2.5 rounded-xl bg-[#151E31] hover:bg-[#FF7A85]/10 text-[#8892A6] hover:text-[#FF7A85] border border-white/[0.08] hover:border-[#FF7A85]/30 transition-colors cursor-pointer"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
 
         <button
           onClick={onOpenAddStage}
