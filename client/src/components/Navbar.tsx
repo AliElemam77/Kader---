@@ -86,23 +86,6 @@ export const Navbar: FC<NavbarProps> = ({
               {isAr ? 'كادر' : 'Kader'}
             </span>
           </div>
-
-          {/* Org Selector Pill: Only visible to authenticated HR staff */}
-          {isLoggedIn && (
-            <div
-              onClick={() => toast.info(isAr ? 'مؤسسة تار — مساحة العمل النشطة' : 'TAR Group — Active Workspace')}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] transition-colors cursor-pointer text-xs select-none"
-              title="Workspace Organization"
-            >
-              <div className="w-5 h-5 rounded-md bg-[#4C8DFF] text-white font-bold text-[11px] flex items-center justify-center shrink-0">
-                {isAr ? 'ت' : 'T'}
-              </div>
-              <span className="font-semibold text-slate-200 text-xs">
-                {isAr ? 'مؤسسة تار' : 'TAR Group'}
-              </span>
-              <ChevronDown size={13} className="text-slate-400" />
-            </div>
-          )}
         </div>
 
         {/* ================================================================= */}
