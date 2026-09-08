@@ -123,14 +123,16 @@ router.post('/jobs/:jobId/apply', async (req: Request, res: Response): Promise<v
         currentStageName: firstStageName,
       });
 
-      MailService.sendEmail({
-        to: candidate.email,
-        subject: `Application Received: ${job.title} — Hire ATS`,
-        html: emailHtml,
-        type: 'APPLICATION_RECEIVED',
-      }).catch((err) => {
+      try {
+        await MailService.sendEmail({
+          to: candidate.email,
+          subject: `Application Received: ${job.title} — Hire ATS`,
+          html: emailHtml,
+          type: 'APPLICATION_RECEIVED',
+        });
+      } catch (err) {
         console.warn(`ℹ️ Application confirmation email warning: ${(err as Error).message}`);
-      });
+      }
     }
 
     sendSuccess(res, candidate, 'Application submitted successfully! We will review your profile.', 201);

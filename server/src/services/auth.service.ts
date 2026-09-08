@@ -96,15 +96,23 @@ export class AuthService {
       loginPageUrl,
     });
 
-    // Send Email & record in live ATS Outbox
-    MailService.sendEmail({
-      to: normalizedEmail,
-      subject: `رمز التحقق لدخول كادر: ${otpCode} | Kader ATS Login Code`,
-      html: emailHtml,
-      type: 'AUTH_OTP',
-    }).catch((err) => {
-      console.warn(`ℹ️ MailService log: ${(err as Error).message}`);
-    });
+    // Send Email & record in live ATS Outbox (AWAIT is required on Serverless/Vercel)
+    try {
+      const emailResult = await MailService.sendEmail({
+        to: normalizedEmail,
+        subject: `رمز التحقق لدخول كادر: ${otpCode} | Kader ATS Login Code`,
+        html: emailHtml,
+        type: 'AUTH_OTP',
+      });
+
+      if (emailResult.status === 'FAILED') {
+        console.error(`❌ Failed to send OTP email: ${emailResult.error}`);
+        throw new Error(emailResult.error || 'فشل إرسال كود التحقق إلى البريد');
+      }
+    } catch (mailErr) {
+      console.error(`❌ MailService error: ${(mailErr as Error).message}`);
+      throw new Error(`فشل إرسال رمز التحقق إلى بريدك الإلكتروني: ${(mailErr as Error).message}`);
+    }
 
     // Log credentials to console for instant developer access
     console.log(`\n======================================================`);

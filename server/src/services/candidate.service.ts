@@ -181,14 +181,16 @@ export class CandidateService {
         rejectionReason,
       });
 
-      MailService.sendEmail({
-        to: candidate.email,
-        subject: `Update regarding your application for ${jobTitle}`,
-        html: emailHtml,
-        type: 'STAGE_UPDATE',
-      }).catch((err) => {
+      try {
+        await MailService.sendEmail({
+          to: candidate.email,
+          subject: `Update regarding your application for ${jobTitle}`,
+          html: emailHtml,
+          type: 'STAGE_UPDATE',
+        });
+      } catch (err) {
         console.warn(`ℹ️ Candidate rejection email log: ${(err as Error).message}`);
-      });
+      }
     }
 
     const applicantData = (updated.applicantData as Record<string, any>) || {};

@@ -7,38 +7,28 @@ export const isSmtpConfigured = (): boolean => {
   return true;
 };
 
-// Create optimized nodemailer transport
+// Create optimized nodemailer transport for serverless and production
 export function buildTransporter() {
-  const isGmail = env.SMTP_SERVICE === 'gmail' || env.SMTP_HOST.includes('gmail');
-
-  if (isGmail) {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: isSmtpConfigured()
-        ? {
-            user: env.SMTP_USER,
-            pass: env.SMTP_PASS.replace(/\s+/g, ''), // Remove spaces if user copied Google App Password as "xxxx xxxx xxxx xxxx"
-          }
-        : undefined,
-      connectionTimeout: 8000,
-      greetingTimeout: 8000,
-      socketTimeout: 8000,
-    });
-  }
+  const cleanPass = (env.SMTP_PASS || '').replace(/["'\s]/g, '');
+  const cleanUser = (env.SMTP_USER || '').trim();
 
   return nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE || env.SMTP_PORT === 465,
+    host: env.SMTP_HOST || 'smtp.gmail.com',
+    port: env.SMTP_PORT ? Number(env.SMTP_PORT) : 465,
+    secure: env.SMTP_SECURE || true,
+    pool: false, // Critical for serverless: creates a fresh socket and disconnects cleanly
     auth: isSmtpConfigured()
       ? {
-          user: env.SMTP_USER,
-          pass: env.SMTP_PASS,
+          user: cleanUser,
+          pass: cleanPass,
         }
       : undefined,
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 8000,
+    tls: {
+      rejectUnauthorized: false, // Prevent SSL handshake failures in containerized cloud environments
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 }
 
@@ -47,14 +37,15 @@ export const transporter = buildTransporter();
 // Helper to verify SMTP connection
 export async function verifyMailer(): Promise<{ connected: boolean; message: string }> {
   if (!isSmtpConfigured()) {
-    const msg = 'SMTP credentials not configured in server/.env. Emails are simulated and available in the Live Outbox.';
+    const msg = 'SMTP credentials not configured in environment. Emails are simulated and available in the Live Outbox.';
     console.log(`ℹ️  ${msg}`);
     return { connected: false, message: msg };
   }
 
   try {
-    await transporter.verify();
-    const msg = `SMTP Mailer connected successfully to ${env.SMTP_HOST || env.SMTP_SERVICE} (${env.SMTP_USER})`;
+    const activeTransporter = buildTransporter();
+    await activeTransporter.verify();
+    const msg = `SMTP Mailer connected successfully to ${env.SMTP_HOST || 'smtp.gmail.com'} (${env.SMTP_USER})`;
     console.log(`✅ ${msg}`);
     return { connected: true, message: msg };
   } catch (error) {

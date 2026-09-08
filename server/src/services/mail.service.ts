@@ -77,19 +77,26 @@ export class MailService {
     try {
       const logoPath = path.resolve(__dirname, '../../assets/kader-logo.png');
       const attachments: Array<{ filename: string; path: string; cid: string }> = [];
+      let finalHtml = html;
+
       if (fs.existsSync(logoPath)) {
         attachments.push({
           filename: 'kader-logo.png',
           path: logoPath,
           cid: 'kader-logo@hire-ats',
         });
+      } else {
+        // Fallback for Serverless Lambda where local filesystem assets are not bundled
+        const publicLogoUrl = 'https://kader-teal.vercel.app/kader-logo.png';
+        finalHtml = finalHtml.replace(/cid:kader-logo@hire-ats/g, publicLogoUrl);
       }
 
-      const info = await transporter.sendMail({
+      const activeTransporter = buildTransporter();
+      const info = await activeTransporter.sendMail({
         from: sender,
         to,
         subject,
-        html,
+        html: finalHtml,
         text,
         attachments,
       });
