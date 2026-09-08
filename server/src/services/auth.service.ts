@@ -35,11 +35,13 @@ export class AuthService {
     if (!user) {
       const usersCount = await prisma.user.count();
       if (usersCount === 0 || normalizedEmail.includes('admin') || normalizedEmail.includes('hire-ats')) {
+        const isRecruiter = normalizedEmail.includes('recruiter');
+        const role = isRecruiter ? 'RECRUITER' : (normalizedEmail.includes('admin') || usersCount === 0 ? 'HR_MANAGER' : 'RECRUITER');
         user = await prisma.user.create({
           data: {
             email: normalizedEmail,
-            name: normalizedEmail.split('@')[0].toUpperCase(),
-            role: usersCount === 0 ? 'HR_MANAGER' : 'RECRUITER',
+            name: isRecruiter ? 'مسؤول توظيف (Recruiter)' : normalizedEmail.split('@')[0].toUpperCase(),
+            role,
             status: 'ACTIVE',
           },
         });

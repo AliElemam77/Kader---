@@ -75,6 +75,13 @@ export function App() {
     setActiveTab('pipeline');
   };
 
+  // Strict Role Guard: Ensure non-HR_MANAGER users can never access or remain on the Team tab
+  useEffect(() => {
+    if (user && user.role !== 'HR_MANAGER' && activeTab === 'team') {
+      setActiveTab('pipeline');
+    }
+  }, [user, activeTab]);
+
   const handleLogout = (showToast = true) => {
     localStorage.removeItem('ats_token');
     setToken(null);
