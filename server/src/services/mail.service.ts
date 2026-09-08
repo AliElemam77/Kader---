@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { transporter, isSmtpConfigured, verifyMailer } from '../config/mailer';
 import { env } from '../config/env';
 
@@ -73,12 +75,23 @@ export class MailService {
     }
 
     try {
+      const logoPath = path.resolve(__dirname, '../../assets/kader-logo.png');
+      const attachments: Array<{ filename: string; path: string; cid: string }> = [];
+      if (fs.existsSync(logoPath)) {
+        attachments.push({
+          filename: 'kader-logo.png',
+          path: logoPath,
+          cid: 'kader-logo@hire-ats',
+        });
+      }
+
       const info = await transporter.sendMail({
         from: sender,
         to,
         subject,
         html,
         text,
+        attachments,
       });
 
       emailRecord.status = 'DELIVERED';

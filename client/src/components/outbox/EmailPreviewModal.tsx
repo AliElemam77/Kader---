@@ -29,7 +29,7 @@ export const EmailPreviewModal: FC<EmailPreviewModalProps> = ({ email, onClose }
         <div className="flex-1 overflow-y-auto bg-slate-950 rounded-2xl p-4 border border-slate-800">
           <div
             className="prose prose-invert max-w-none text-xs"
-            dangerouslySetInnerHTML={{ __html: email.html }}
+            dangerouslySetInnerHTML={{ __html: email.html.replace(/cid:kader-logo@hire-ats/g, '/kader-logo.png') }}
           />
         </div>
 

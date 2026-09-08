@@ -84,7 +84,6 @@ export class AuthService {
       userName: user.name,
       otpCode,
       loginPageUrl,
-      clientIp: '192.135.152',
     });
 
     // Send Email & record in live ATS Outbox

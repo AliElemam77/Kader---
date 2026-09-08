@@ -83,16 +83,22 @@ function buildMasterEmailLayout(params: {
           <td>
             <div class="email-card" style="background-color: #ffffff; border-radius: 28px; padding: 40px 36px; box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08); text-align: center; color: #111827;">
               
-              <!-- Top App Logo Squircle Badge with Kader Mark -->
-              <div style="margin: 0 auto 22px auto; width: 50px; height: 50px; background: #070A14; border-radius: 14px; box-shadow: 0 10px 25px -5px rgba(7, 10, 20, 0.5); text-align: center; line-height: 50px;">
-                <svg width="28" height="28" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-top: 11px;">
-                  <circle cx="9" cy="23" r="4" fill="#5A6478" />
-                  <rect x="5" y="29" width="8" height="13" rx="4" fill="#5A6478" />
-                  <circle cx="24" cy="17" r="4" fill="#4C8DFF" />
-                  <rect x="20" y="23" width="8" height="19" rx="4" fill="#4C8DFF" />
-                  <circle cx="39" cy="10" r="4" fill="#F5B23D" />
-                  <rect x="35" y="16" width="8" height="26" rx="4" fill="#F5B23D" />
-                </svg>
+              <!-- Top App Logo Squircle Badge with Kader Mark (High-Res Retina & 100% Client Compatible) -->
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 14px auto;">
+                <tr>
+                  <td align="center" valign="middle" style="text-align: center;">
+                    <img
+                      src="cid:kader-logo@hire-ats"
+                      alt="كادر ATS"
+                      width="54"
+                      height="54"
+                      style="display: block; margin: 0 auto; width: 54px; height: 54px; border: 0; outline: none; text-decoration: none; border-radius: 15px; box-shadow: 0 10px 25px -5px rgba(7, 10, 20, 0.45);"
+                    />
+                  </td>
+                </tr>
+              </table>
+              <div style="font-size: 14px; font-weight: 800; color: #0f172a; margin-bottom: 22px; letter-spacing: -0.2px;">
+                كادر &bull; Kader <span style="display: inline-block; font-size: 10px; font-weight: 700; color: #b45309; background-color: #fef3c7; border: 1px solid #fde68a; padding: 1.5px 6px; border-radius: 5px; vertical-align: 1px;">ATS</span>
               </div>
 
               <!-- Main Title -->
@@ -248,7 +254,7 @@ export function generateAuthOtpEmail(params: {
     contentHtml,
     alertBoxTitle: 'Was this request not made by you?',
     alertBoxContent,
-    badgePillText: `&bull; IP ${clientIp}`,
+    badgePillText: '🔒 جلسة آمنة &bull; Secure Auth Session &bull; Kader ATS',
     automatedNote: 'This is an automated security message. Please do not reply.',
   });
 }
