@@ -25,14 +25,25 @@ export const EmailStepForm: FC<EmailStepFormProps> = ({
   return (
     <div>
       {/* Portfolio / Dev Preview Notice */}
-      <div className="p-3 rounded-2xl bg-[#F5B23D]/10 border border-dashed border-[#F5B23D]/30 text-[11px] text-[#EEF1F7] mb-4 leading-relaxed text-center">
-        <div className="inline-flex items-center gap-1 text-[#F5B23D] font-bold text-xs mb-1">
-          <Sparkles size={13} />
-          <span>وضع العرض التجريبي للمقيّمين • Demo Mode</span>
+      <div className="p-3.5 rounded-2xl bg-[#F5B23D]/10 border border-[#F5B23D]/30 text-[11px] text-[#EEF1F7] mb-4 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="inline-flex items-center gap-1.5 text-[#F5B23D] font-bold text-xs">
+            <Sparkles size={13} />
+            <span>وضع المعاينة لتقييم الـ CV • Demo Mode</span>
+          </div>
+          <span className="px-2 py-0.5 rounded-full bg-[#F5B23D]/20 text-[#F5B23D] text-[9.5px] font-mono font-bold tracking-wider">
+            DEV MODE ACTIVE
+          </span>
         </div>
-        <p className="text-[#8892A6] text-[10.5px]">
-          مرحباً بك! يمكنك إدخال أي بريد إلكتروني (أو اختيار حساب تجريبي بالأسفل) لاختبار لوحة التحكم فوراً بدون قيود، وسيظهر لك كود الـ OTP على الشاشة مباشرة.
+
+        <p className="text-[#EEF1F7] text-xs leading-relaxed">
+          مرحباً بك! يمكنك كتابة أي بريد إلكتروني خاص بك أو النقر على أحد الحسابات التجريبية بالأسفل لاختبار لوحة التحكم فوراً، وسيظهر لك كود الـ OTP على الشاشة مباشرة.
         </p>
+
+        <div className="p-2.5 rounded-xl bg-[#070A14]/80 border border-white/[0.08] text-[10.5px] text-[#8892A6] leading-relaxed">
+          <strong className="text-white block mb-0.5">🔒 تنويه أمني معطياتي للمُقيّم:</strong>
+          التسجيل التلقائي المفتوح متاح حالياً فقط لأن النظام يعمل بـ <span className="text-[#F5B23D] font-semibold">وضع التطوير (DEV MODE)</span> لتسهيل الفحص السريع. في بيئة العمل الإنتاجية الحقيقية، يقتصر دخول البوابة حصرياً على أعضاء فريق الـ HR الذين تتم إضافتهم ودعوتهم بواسطة <span className="text-[#35D6A4] font-semibold">مدير الموارد البشرية (HR Manager)</span> فقط.
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

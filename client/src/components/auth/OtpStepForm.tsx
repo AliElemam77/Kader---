@@ -36,32 +36,45 @@ export const OtpStepForm: FC<OtpStepFormProps> = ({
       </div>
 
       {devOtp && (
-        <div className="p-4 rounded-2xl bg-[#35D6A4]/10 border border-dashed border-[#35D6A4]/40 text-center mb-4 space-y-2.5">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#35D6A4]/20 text-[#35D6A4] text-[10.5px] font-bold">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#35D6A4] animate-pulse"></span>
-            <span>وضع المعاينة والـ CV (Dev / Demo Mode)</span>
+        <div className="p-4 rounded-2xl bg-[#35D6A4]/10 border border-[#35D6A4]/40 text-center mb-4 space-y-2.5 shadow-lg shadow-[#35D6A4]/5">
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#35D6A4]/20 text-[#35D6A4] text-[10.5px] font-bold">
+              <span className="w-2 h-2 rounded-full bg-[#35D6A4] animate-pulse"></span>
+              <span>رمز الدخول المباشر • DEV OTP ACTIVE</span>
+            </div>
+            <span className="text-[10px] text-[#35D6A4] font-semibold bg-[#35D6A4]/15 px-2 py-0.5 rounded-md">
+              معاينة فورية
+            </span>
           </div>
 
-          <p className="text-xs text-[#8892A6]">
-            رمز التحقق الفوري لتقييم المنظومة بدون انتظار:
+          <p className="text-xs text-[#EEF1F7] leading-relaxed">
+            تم استخراج رمز التحقق الفوري لتسهيل تقييم المنظومة فوراً بدون انتظار:
           </p>
 
-          <div className="flex items-center justify-center gap-3">
-            <span className="text-lg font-mono font-bold tracking-[0.3em] text-[#EEF1F7] bg-[#070A14] px-4 py-1.5 rounded-xl border border-white/10 shadow-inner">
+          <div className="flex items-center justify-center gap-3 bg-[#070A14] p-3 rounded-2xl border border-white/10">
+            <span className="text-xl sm:text-2xl font-mono font-black tracking-[0.35em] text-[#35D6A4]">
               {devOtp}
             </span>
             <button
               type="button"
-              onClick={() => setValue('code', devOtp)}
-              className="px-3.5 py-1.5 rounded-xl bg-[#35D6A4] hover:bg-[#2ec293] text-[#070A14] text-xs font-bold cursor-pointer transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+              onClick={() => {
+                setValue('code', devOtp);
+              }}
+              className="px-3.5 py-2 rounded-xl bg-[#35D6A4] hover:bg-[#2ec293] text-[#070A14] text-xs font-bold cursor-pointer transition-all shadow-md active:scale-95 flex items-center gap-1.5"
             >
-              <span>لصق الكود فوراً</span>
+              <span>إدراج الكود فوراً</span>
             </button>
           </div>
 
-          <p className="text-[10px] text-[#8892A6] pt-1.5 border-t border-white/[0.06] leading-relaxed">
-            * تم إرسال الرمز أيضاً إلى بريدك. في بيئة العمل الحقيقية، الدخول مقتصر حصرياً على موظفي الـ HR المضافين بواسطة مدير النظام.
-          </p>
+          <div className="text-[10.5px] text-[#8892A6] text-start pt-2 border-t border-white/[0.08] leading-relaxed space-y-1">
+            <p className="flex items-center gap-1.5 text-[#EEF1F7]">
+              <span>✉️</span>
+              <span>تم أيضاً إرسال الرمز رسمياً إلى بريدك الإلكتروني.</span>
+            </p>
+            <p>
+              🔒 <strong className="text-white">تنويه أمني:</strong> يظهر هذا الرمز على الشاشة استثنائياً في وضع التطوير (DEV MODE) لتمكين مراجعي الـ CV من تجربة المنظومة بسلاسة. في النظام الفعلي، يُشترط وجود حساب معتمد من الـ HR Manager ولا يظهر الرمز إلا للمستلم في بريده.
+            </p>
+          </div>
         </div>
       )}
 

@@ -59,7 +59,10 @@ export function useHRAuth(
         if (resJson.data?.devOtp) {
           setDevOtp(resJson.data.devOtp);
         }
-        toast.success('تم إرسال رمز التحقق إلى بريدك الإلكتروني!', { id: toastId });
+        const successMsg = resJson.data?.emailSent
+          ? 'تم إرسال رمز التحقق لبريدك وهو متاح أيضاً بالأسفل!'
+          : 'تم تجهيز رمز الدخول المباشر (وضع المعاينة DEV)!';
+        toast.success(successMsg, { id: toastId });
       } else {
         toast.error(resJson.message || 'Access denied', { id: toastId });
       }

@@ -130,7 +130,7 @@ export function App() {
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 flex-1 pb-16">
         {/* Regular users only see Public Careers. Authenticated HR can navigate between tabs */}
         {!isLoggedIn || activeTab === 'careers' ? (
-          <PublicCareers />
+          <PublicCareers onOpenLogin={!isLoggedIn ? () => setIsLoginOpen(true) : undefined} />
         ) : activeTab === 'pipeline' ? (
           <PipelinePreview token={token} />
         ) : activeTab === 'builder' ? (

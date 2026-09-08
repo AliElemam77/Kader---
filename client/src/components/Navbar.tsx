@@ -221,16 +221,16 @@ export const Navbar: FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* Dev Mode Recruiter Portal Trigger: Accessible instantly in dev mode */}
-          {!isLoggedIn && import.meta.env.DEV && onOpenLogin && (
+          {/* CV Evaluator & HR Portal Trigger: Always accessible so portfolio reviewers can enter instantly */}
+          {!isLoggedIn && onOpenLogin && (
             <button
               type="button"
               onClick={onOpenLogin}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F5B23D]/10 hover:bg-[#F5B23D]/20 text-[#F5B23D] border border-[#F5B23D]/30 text-xs font-semibold transition-all cursor-pointer shadow-sm select-none"
-              title="بوابة فريق التوظيف (وضع التطوير Dev Mode)"
+              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl bg-[#F5B23D]/10 hover:bg-[#F5B23D]/20 text-[#F5B23D] border border-[#F5B23D]/35 text-xs font-bold transition-all cursor-pointer shadow-sm active:scale-95 select-none"
+              title={isAr ? 'دخول مسؤولي التوظيف (وضع المعاينة لتقييم الـ CV)' : 'HR Login (CV Demo Mode)'}
             >
               <Lock size={12} />
-              <span>{isAr ? 'بوابة التوظيف' : 'Recruiter Portal'}</span>
+              <span>{isAr ? 'دخول الـ HR (تجربة Demo)' : 'HR Login (Demo)'}</span>
             </button>
           )}
 

@@ -26,7 +26,14 @@ export class AuthService {
   }
 
   // Request Access: Generates 6-digit OTP + Magic Link token and dispatches hybrid email
-  static async requestAccess(email: string): Promise<{ success: boolean; message: string; devOtp?: string; devLink?: string }> {
+  static async requestAccess(email: string): Promise<{
+    success: boolean;
+    message: string;
+    devOtp?: string;
+    devLink?: string;
+    emailSent?: boolean;
+    emailError?: string;
+  }> {
     const normalizedEmail = email.trim().toLowerCase();
 
     // Check if user is registered/invited
@@ -91,6 +98,9 @@ export class AuthService {
     });
 
     // Send Email & record in live ATS Outbox (AWAIT is required on Serverless/Vercel)
+    let emailSent = false;
+    let emailError: string | null = null;
+
     try {
       const emailResult = await MailService.sendEmail({
         to: normalizedEmail,
@@ -100,26 +110,33 @@ export class AuthService {
       });
 
       if (emailResult.status === 'FAILED') {
-        console.error(`❌ Failed to send OTP email: ${emailResult.error}`);
-        throw new Error(emailResult.error || 'فشل إرسال كود التحقق إلى البريد');
+        console.warn(`⚠️ Failed to send OTP email: ${emailResult.error}`);
+        emailError = emailResult.error || 'فشل إرسال كود التحقق إلى البريد';
+      } else {
+        emailSent = true;
       }
     } catch (mailErr) {
-      console.error(`❌ MailService error: ${(mailErr as Error).message}`);
-      throw new Error(`فشل إرسال رمز التحقق إلى بريدك الإلكتروني: ${(mailErr as Error).message}`);
+      console.warn(`⚠️ MailService error: ${(mailErr as Error).message}`);
+      emailError = (mailErr as Error).message;
     }
 
     // Log credentials to console for instant developer access
     console.log(`\n======================================================`);
     console.log(`🔑 [DEV AUTH] Login requested for: ${normalizedEmail}`);
     console.log(`🔢 6-Digit OTP: ${otpCode}`);
+    console.log(`✉️ Email Delivered: ${emailSent}`);
     console.log(`🔗 Login Page:  ${loginPageUrl}`);
     console.log(`======================================================\n`);
 
     return {
       success: true,
-      message: 'A 6-digit verification code has been sent to your email.',
+      message: emailSent
+        ? 'تم إرسال رمز التحقق إلى بريدك الإلكتروني، وهو متوفر أيضاً على الشاشة للمعاينة الفورية.'
+        : 'تم توليد رمز التحقق المباشر (وضع المعاينة DEV).',
       devOtp: otpCode, // Always returned for instant portfolio review & demo access
       devLink: loginPageUrl,
+      emailSent,
+      emailError: emailSent ? undefined : (emailError ?? undefined),
     };
   }
 
