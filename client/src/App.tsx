@@ -101,6 +101,10 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         user={user}
+        onOpenLogin={() => {
+          setLoginInitialEmail(undefined);
+          setIsLoginOpen(true);
+        }}
         onLogout={() => handleLogout(true)}
         onOpenOutbox={() => setIsOutboxOpen(true)}
       />

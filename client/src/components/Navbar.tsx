@@ -6,6 +6,7 @@ import {
   User,
   Building2,
   LogOut,
+  Lock,
 } from 'lucide-react';
 import type { AuthUser } from '../App';
 import { useLanguage } from '../context/LanguageContext';
@@ -16,6 +17,7 @@ interface NavbarProps {
   activeTab: 'careers' | 'pipeline' | 'builder' | 'jobs' | 'team';
   setActiveTab: (tab: 'careers' | 'pipeline' | 'builder' | 'jobs' | 'team') => void;
   user: AuthUser | null;
+  onOpenLogin?: () => void;
   onLogout: () => void;
   onOpenOutbox: () => void;
   pipelineCount?: number;
@@ -26,6 +28,7 @@ export const Navbar: FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   user,
+  onOpenLogin,
   onLogout,
   onOpenOutbox,
   pipelineCount = 16,
@@ -215,6 +218,19 @@ export const Navbar: FC<NavbarProps> = ({
               ع
             </button>
           </div>
+
+          {/* Dev Mode Recruiter Portal Trigger: Accessible instantly in dev mode */}
+          {!isLoggedIn && import.meta.env.DEV && onOpenLogin && (
+            <button
+              type="button"
+              onClick={onOpenLogin}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F5B23D]/10 hover:bg-[#F5B23D]/20 text-[#F5B23D] border border-[#F5B23D]/30 text-xs font-semibold transition-all cursor-pointer shadow-sm select-none"
+              title="بوابة فريق التوظيف (وضع التطوير Dev Mode)"
+            >
+              <Lock size={12} />
+              <span>{isAr ? 'بوابة التوظيف' : 'Recruiter Portal'}</span>
+            </button>
+          )}
 
           {/* Authenticated User Menu (Shown ONLY when logged in) */}
           {isLoggedIn && (
