@@ -49,8 +49,8 @@
 | :--- | :--- | :--- |
 | `NODE_ENV` | `production` | وضع الإنتاج |
 | `PORT` | `5000` | منفذ السيرفر |
-| `DATABASE_URL` | `postgresql://postgres.xvziprjtvxfxyszqbvvb:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true` | رابط Supabase Pooler |
-| `DIRECT_URL` | `postgresql://postgres.xvziprjtvxfxyszqbvvb:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:5432/postgres` | رابط Supabase Direct للميجريشن |
+| `DATABASE_URL` | `postgresql://postgres.xvziprjtvxfxyszqbvvb:KaderATS_2026_Secure!@aws-0-eu-central-1.pooler.supabase.com:5432/postgres` | رابط اتصال قاعدة البيانات |
+| `DIRECT_URL` | `postgresql://postgres.xvziprjtvxfxyszqbvvb:KaderATS_2026_Secure!@aws-0-eu-central-1.pooler.supabase.com:5432/postgres` | رابط مباشر للميجريشن |
 | `JWT_SECRET` | `kader_secure_prod_jwt_secret_2026_x` | مفتاح تشفير الجلسات |
 | `SMTP_SERVICE` | `gmail` | خادم البريد |
 | `SMTP_HOST` | `smtp.gmail.com` | خادم جوجل |
