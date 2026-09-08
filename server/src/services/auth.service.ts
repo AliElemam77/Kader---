@@ -77,38 +77,38 @@ export class AuthService {
       },
     });
 
-    const magicLinkUrl = `${env.CLIENT_URL}/?token=${magicToken}`;
+    const loginPageUrl = `${env.CLIENT_URL}/?auth=login&email=${encodeURIComponent(normalizedEmail)}`;
 
-    // Send Hybrid Email (Magic Link + 6-digit OTP) with modern cosmic layout from reference
+    // Send Email (6-digit OTP + Direct link to Login Page)
     const emailHtml = generateAuthOtpEmail({
       userName: user.name,
       otpCode,
-      magicLinkUrl,
+      loginPageUrl,
       clientIp: '192.135.152',
     });
 
-    // Send Hybrid Email & record in live ATS Outbox
+    // Send Email & record in live ATS Outbox
     MailService.sendEmail({
       to: normalizedEmail,
-      subject: `Your Hire ATS Login Code: ${otpCode}`,
+      subject: `رمز التحقق لدخول كادر: ${otpCode} | Kader ATS Login Code`,
       html: emailHtml,
       type: 'AUTH_OTP',
     }).catch((err) => {
       console.warn(`ℹ️ MailService log: ${(err as Error).message}`);
     });
 
-    // Always log credentials to console for instant developer access
+    // Log credentials to console for instant developer access
     console.log(`\n======================================================`);
-    console.log(`🔑 [DEV AUTH] Passwordless Login for: ${normalizedEmail}`);
+    console.log(`🔑 [DEV AUTH] Login requested for: ${normalizedEmail}`);
     console.log(`🔢 6-Digit OTP: ${otpCode}`);
-    console.log(`🔗 Magic Link:  ${magicLinkUrl}`);
+    console.log(`🔗 Login Page:  ${loginPageUrl}`);
     console.log(`======================================================\n`);
 
     return {
       success: true,
-      message: 'A verification code and 1-click login link have been sent to your email.',
+      message: 'A 6-digit verification code has been sent to your email.',
       devOtp: process.env.NODE_ENV === 'development' ? otpCode : undefined,
-      devLink: process.env.NODE_ENV === 'development' ? magicLinkUrl : undefined,
+      devLink: process.env.NODE_ENV === 'development' ? loginPageUrl : undefined,
     };
   }
 

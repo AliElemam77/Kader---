@@ -32,7 +32,7 @@ export const OtpStepForm: FC<OtpStepFormProps> = ({
   return (
     <div>
       <div className="p-3 rounded-2xl bg-[#070A14] border border-white/10 text-xs text-[#8892A6] text-center mb-4 leading-relaxed">
-        أرسلنا إيميل رسمي إلى <strong className="text-[#EEF1F7] font-mono">{currentEmail}</strong> يحتوي على رابط دخول سريع ورمز تحقق سداسي.
+        أرسلنا رمز تحقق سداسي إلى <strong className="text-[#EEF1F7] font-mono">{currentEmail}</strong>. انسخ الرمز من بريدك والصقه هنا للدخول:
       </div>
 
       {devOtp && (

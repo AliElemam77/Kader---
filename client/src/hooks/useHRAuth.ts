@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,23 +18,33 @@ export type OtpFormValues = z.infer<typeof otpSchema>;
 
 export function useHRAuth(
   onSuccess: (token: string, user: any) => void,
-  onClose: () => void
+  onClose: () => void,
+  initialEmail?: string
 ) {
-  const [step, setStep] = useState<'EMAIL' | 'OTP'>('EMAIL');
-  const [currentEmail, setCurrentEmail] = useState('');
+  const [step, setStep] = useState<'EMAIL' | 'OTP'>(initialEmail ? 'OTP' : 'EMAIL');
+  const [currentEmail, setCurrentEmail] = useState(initialEmail || '');
   const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const emailForm = useForm<EmailFormValues>({
     resolver: zodResolver(emailSchema),
+    defaultValues: { email: initialEmail || '' },
   });
 
   const otpForm = useForm<OtpFormValues>({
     resolver: zodResolver(otpSchema),
   });
 
+  useEffect(() => {
+    if (initialEmail) {
+      setCurrentEmail(initialEmail);
+      setStep('OTP');
+      emailForm.setValue('email', initialEmail);
+    }
+  }, [initialEmail]);
+
   // Step 1: Request Access
   const onRequestAccess = async (data: EmailFormValues) => {
-    const toastId = toast.loading('Dispatching Magic Link & OTP...');
+    const toastId = toast.loading('Sending 6-digit verification code...');
     try {
       const res = await fetch(`${API_BASE_URL}/auth/request-access`, {
         method: 'POST',
@@ -49,7 +59,7 @@ export function useHRAuth(
         if (resJson.data?.devOtp) {
           setDevOtp(resJson.data.devOtp);
         }
-        toast.success('Login code & Magic Link sent to your inbox!', { id: toastId });
+        toast.success('تم إرسال رمز التحقق إلى بريدك الإلكتروني!', { id: toastId });
       } else {
         toast.error(resJson.message || 'Access denied', { id: toastId });
       }

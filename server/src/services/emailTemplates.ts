@@ -191,10 +191,10 @@ function buildMasterEmailLayout(params: {
 export function generateAuthOtpEmail(params: {
   userName: string;
   otpCode: string;
-  magicLinkUrl: string;
+  loginPageUrl: string;
   clientIp?: string;
 }): string {
-  const { userName, otpCode, magicLinkUrl, clientIp = '192.135.152' } = params;
+  const { userName, otpCode, loginPageUrl, clientIp = '192.135.152' } = params;
 
   // Split OTP into single characters for the individual rounded boxes
   const digits = otpCode.split('');
@@ -216,7 +216,7 @@ export function generateAuthOtpEmail(params: {
         </tr>
       </table>
       <p style="color: #94a3b8; font-size: 11.5px; margin: 12px 0 0 0; font-weight: 500;">
-        Don't share this code with anyone!
+        Copy this code to paste into the login page &bull; انسخ هذا الرمز للصقه في صفحة الدخول
       </p>
     </div>
   `;
@@ -229,8 +229,11 @@ export function generateAuthOtpEmail(params: {
     ${digitBoxesHtml}
 
     <div style="text-align: center; margin: 24px 0 14px 0;">
-      <a href="${magicLinkUrl}" target="_blank" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-weight: 700; display: inline-block; font-size: 13.5px; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);">
-        ✨ Or Log In Instantly with Magic Link
+      <p style="color: #64748b; font-size: 12.5px; margin: 0 0 12px 0;">
+        Copy the 6-digit code above and click below to open the login page:
+      </p>
+      <a href="${loginPageUrl}" target="_blank" style="background: linear-gradient(135deg, #F5B23D 0%, #E29921 100%); color: #111827; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-weight: 700; display: inline-block; font-size: 13.5px; box-shadow: 0 4px 14px rgba(245, 178, 61, 0.35);">
+        🔐 Go to Login Page &bull; الانتقال لصفحة تسجيل الدخول
       </a>
     </div>
   `;

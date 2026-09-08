@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'sonner';
+import { Lock } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { PublicCareers } from './components/PublicCareers';
 import { PipelinePreview } from './components/PipelinePreview';
@@ -20,37 +21,25 @@ export interface AuthUser {
 export function App() {
   const [activeTab, setActiveTab] = useState<'careers' | 'pipeline' | 'builder' | 'jobs' | 'team'>('careers');
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
+  const [loginInitialEmail, setLoginInitialEmail] = useState<string | undefined>(undefined);
   const [isOutboxOpen, setIsOutboxOpen] = useState<boolean>(false);
   const [token, setToken] = useState<string | null>(localStorage.getItem('ats_token'));
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  // 1. Handle Magic Link Token in URL on Page Mount
+  // 1. Detect Direct Login Page Link & Email Pre-fill from Email
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const magicToken = params.get('token');
+    const authParam = params.get('auth');
+    const emailParam = params.get('email');
+    const pathname = window.location.pathname;
 
-    if (magicToken) {
-      const toastId = toast.loading('Verifying single-click Magic Link...');
-      fetch(`${API_BASE_URL}/auth/verify-magic-link`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: magicToken }),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.data?.token) {
-            handleLoginSuccess(data.data.token, data.data.user);
-            toast.success(`Welcome back, ${data.data.user.name}! Logged in via Magic Link.`, { id: toastId });
-          } else {
-            toast.error(data.message || 'Magic link is invalid or expired.', { id: toastId });
-          }
-        })
-        .catch(() => {
-          toast.error('Error connecting to authentication server.', { id: toastId });
-        })
-        .finally(() => {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        });
+    if (authParam === 'login' || pathname === '/login' || pathname === '/admin' || pathname === '/hr') {
+      setIsLoginOpen(true);
+      if (emailParam) {
+        setLoginInitialEmail(emailParam);
+      }
+      // Clean up the URL query params without reloading the page
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
@@ -68,13 +57,16 @@ export function App() {
             setToken(storedToken);
             setActiveTab('pipeline');
           } else {
-            handleLogout();
+            handleLogout(false);
           }
         })
-        .catch(() => handleLogout());
+        .catch(() => handleLogout(false));
+    } else {
+      setUser(null);
+      setToken(null);
+      setActiveTab('careers');
     }
   }, []);
-
 
   const handleLoginSuccess = (newToken: string, newUser: AuthUser) => {
     localStorage.setItem('ats_token', newToken);
@@ -83,12 +75,14 @@ export function App() {
     setActiveTab('pipeline');
   };
 
-  const handleLogout = () => {
+  const handleLogout = (showToast = true) => {
     localStorage.removeItem('ats_token');
     setToken(null);
     setUser(null);
     setActiveTab('careers');
-    toast.info('Logged out of HR Workspace');
+    if (showToast) {
+      toast.info('تم تسجيل الخروج من مساحة العمل بنجاح');
+    }
   };
 
   const handleNavigateFromJobs = (tab: 'pipeline' | 'builder', jobId: string) => {
@@ -96,6 +90,8 @@ export function App() {
     localStorage.setItem('ats_builder_job_id', jobId);
     setActiveTab(tab);
   };
+
+  const isLoggedIn = user !== null && token !== null;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#070A14] text-[#EEF1F7] antialiased selection:bg-[#F5B23D]/20 selection:text-[#F5B23D]">
@@ -105,17 +101,25 @@ export function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         user={user}
-        onOpenLogin={() => setIsLoginOpen(true)}
-        onLogout={handleLogout}
+        onLogout={() => handleLogout(true)}
         onOpenOutbox={() => setIsOutboxOpen(true)}
       />
 
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 flex-1 pb-16">
-        {activeTab === 'careers' && <PublicCareers />}
-        {activeTab === 'pipeline' && <PipelinePreview token={token} />}
-        {activeTab === 'builder' && <FormBuilderPreview />}
-        {activeTab === 'jobs' && <JobsPreview onNavigate={handleNavigateFromJobs} />}
-        {activeTab === 'team' && token && <TeamManagement token={token} />}
+        {/* Regular users only see Public Careers. Authenticated HR can navigate between tabs */}
+        {!isLoggedIn || activeTab === 'careers' ? (
+          <PublicCareers />
+        ) : activeTab === 'pipeline' ? (
+          <PipelinePreview token={token} />
+        ) : activeTab === 'builder' ? (
+          <FormBuilderPreview />
+        ) : activeTab === 'jobs' ? (
+          <JobsPreview onNavigate={handleNavigateFromJobs} />
+        ) : activeTab === 'team' && token ? (
+          <TeamManagement token={token} />
+        ) : (
+          <PublicCareers />
+        )}
       </main>
 
       <footer className="border-t border-white/[0.08] py-8 text-center text-xs text-[#8892A6]">
@@ -127,17 +131,41 @@ export function App() {
         <p className="text-[11px] text-[#5A6478]">
           ATS Platform • Express & Prisma • Tailwind CSS v4 • Vite
         </p>
+
+        {/* Discreet Recruiter Portal Entry Link (hidden from regular applicants) */}
+        {!isLoggedIn && (
+          <div className="mt-4 pt-3 border-t border-white/[0.04]">
+            <button
+              type="button"
+              onClick={() => {
+                setLoginInitialEmail(undefined);
+                setIsLoginOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 text-[11px] text-[#5A6478] hover:text-[#8892A6] transition-colors cursor-pointer"
+              title="دخول فريق التوظيف"
+            >
+              <Lock size={12} />
+              <span>بوابة فريق التوظيف • Recruiter Portal</span>
+            </button>
+          </div>
+        )}
       </footer>
 
+      {/* HR Login Modal */}
       <HRLoginModal
         isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
+        initialEmail={loginInitialEmail}
+        onClose={() => {
+          setIsLoginOpen(false);
+          setLoginInitialEmail(undefined);
+        }}
         onSuccess={(tok, usr) => {
           handleLoginSuccess(tok, usr);
-          toast.success(`Authenticated successfully as ${usr.name}`);
+          toast.success(`مرحباً بك، ${usr.name}! تم تسجيل الدخول بنجاح`);
         }}
       />
 
+      {/* Live Outbox Modal (for inspecting sent emails) */}
       <OutboxModal
         isOpen={isOutboxOpen}
         onClose={() => setIsOutboxOpen(false)}

@@ -10,9 +10,15 @@ interface HRLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (token: string, user: any) => void;
+  initialEmail?: string;
 }
 
-export const HRLoginModal: FC<HRLoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const HRLoginModal: FC<HRLoginModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialEmail,
+}) => {
   const { t } = useLanguage();
   const {
     step,
@@ -24,7 +30,7 @@ export const HRLoginModal: FC<HRLoginModalProps> = ({ isOpen, onClose, onSuccess
     onRequestAccess,
     onVerifyOtp,
     handleAutofillDemo,
-  } = useHRAuth(onSuccess, onClose);
+  } = useHRAuth(onSuccess, onClose, initialEmail);
 
   if (!isOpen) return null;
 
