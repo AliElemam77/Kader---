@@ -56,17 +56,19 @@ export const EditMemberModal: FC<EditMemberModalProps> = ({
             <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5">
               {isAr ? 'الاسم بالكامل' : 'Full Name'} <span className="text-[#FF7A85]">*</span>
             </label>
-            <div className="relative">
-              <User size={15} className="absolute inset-inline-start-3.5 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+            <div
+              className={`flex items-center w-full px-3.5 py-2.5 bg-[#070A14] border rounded-xl transition-all ${
+                errors.name
+                  ? 'border-[#FF7A85] ring-2 ring-[#FF7A85]/30'
+                  : 'border-white/[0.12] focus-within:border-[#F5B23D] focus-within:ring-2 focus-within:ring-[#F5B23D]/40'
+              }`}
+            >
+              <User size={15} className="text-[#8892A6] shrink-0 me-3" />
               <input
                 type="text"
                 {...register('name')}
                 placeholder={isAr ? 'الاسم' : 'Name'}
-                className={`w-full ps-10 pe-3.5 py-2.5 bg-[#070A14] border rounded-xl text-sm text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none focus:ring-2 transition-all ${
-                  errors.name
-                    ? 'border-[#FF7A85] focus:ring-[#FF7A85]/30'
-                    : 'border-white/[0.12] focus:ring-[#F5B23D]/40 focus:border-[#F5B23D]'
-                }`}
+                className="w-full bg-transparent text-sm text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none"
               />
             </div>
             {errors.name && (
@@ -81,17 +83,19 @@ export const EditMemberModal: FC<EditMemberModalProps> = ({
             <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5">
               {isAr ? 'البريد الإلكتروني المؤسسي' : 'Work Email Address'} <span className="text-[#FF7A85]">*</span>
             </label>
-            <div className="relative">
-              <Mail size={15} className="absolute inset-inline-start-3.5 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+            <div
+              className={`flex items-center w-full px-3.5 py-2.5 bg-[#070A14] border rounded-xl transition-all ${
+                errors.email
+                  ? 'border-[#FF7A85] ring-2 ring-[#FF7A85]/30'
+                  : 'border-white/[0.12] focus-within:border-[#F5B23D] focus-within:ring-2 focus-within:ring-[#F5B23D]/40'
+              }`}
+            >
+              <Mail size={15} className="text-[#8892A6] shrink-0 me-3" />
               <input
                 type="email"
                 {...register('email')}
                 placeholder="colleague@kader.sa"
-                className={`w-full ps-10 pe-3.5 py-2.5 bg-[#070A14] border rounded-xl text-sm text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none focus:ring-2 transition-all ${
-                  errors.email
-                    ? 'border-[#FF7A85] focus:ring-[#FF7A85]/30'
-                    : 'border-white/[0.12] focus:ring-[#F5B23D]/40 focus:border-[#F5B23D]'
-                }`}
+                className="w-full bg-transparent text-sm text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none"
               />
             </div>
             {errors.email && (

@@ -51,18 +51,20 @@ export const EmailStepForm: FC<EmailStepFormProps> = ({
           <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5">
             البريد الإلكتروني المؤسسي
           </label>
-          <div className="relative">
-            <Mail size={16} className="absolute inset-inline-start-3.5 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+          <div
+            className={`flex items-center w-full px-3.5 py-2.5 bg-[#070A14] border rounded-xl transition-all ${
+              errors.email
+                ? 'border-[#FF7A85] ring-2 ring-[#FF7A85]/30'
+                : 'border-white/[0.12] focus-within:border-[#F5B23D] focus-within:ring-2 focus-within:ring-[#F5B23D]/40'
+            }`}
+          >
+            <Mail size={16} className="text-[#8892A6] shrink-0 me-3" />
             <input
               type="email"
               autoFocus
               placeholder="name@kader.com"
               {...register('email')}
-              className={`w-full ps-10 pe-3.5 py-2.5 bg-[#070A14] border rounded-xl text-sm text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none focus:ring-2 transition-all ${
-                errors.email
-                  ? 'border-[#FF7A85] focus:ring-[#FF7A85]/30'
-                  : 'border-white/[0.12] focus:ring-[#F5B23D]/40 focus:border-[#F5B23D]'
-              }`}
+              className="w-full bg-transparent text-sm text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none"
             />
           </div>
           {errors.email && (

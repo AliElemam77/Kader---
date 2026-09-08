@@ -83,19 +83,21 @@ export const OtpStepForm: FC<OtpStepFormProps> = ({
           <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5 text-center">
             {t('auth.enter_code')}
           </label>
-          <div className="relative">
-            <KeyRound size={16} className="absolute inset-inline-start-3.5 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+          <div
+            className={`flex items-center w-full px-4 py-3 bg-[#070A14] border rounded-xl transition-all ${
+              errors.code
+                ? 'border-[#FF7A85] ring-2 ring-[#FF7A85]/30'
+                : 'border-white/[0.12] focus-within:border-[#F5B23D] focus-within:ring-2 focus-within:ring-[#F5B23D]/40'
+            }`}
+          >
+            <KeyRound size={18} className="text-[#8892A6] shrink-0 me-3" />
             <input
               type="text"
               maxLength={6}
               autoFocus
               placeholder="000000"
               {...register('code')}
-              className={`w-full ps-10 pe-4 py-3 bg-[#070A14] border rounded-xl text-xl font-mono tracking-[0.4em] text-center text-[#F5B23D] placeholder-[#5A6478] focus:outline-none focus:ring-2 transition-all ${
-                errors.code
-                  ? 'border-[#FF7A85] focus:ring-[#FF7A85]/30'
-                  : 'border-white/[0.12] focus:ring-[#F5B23D]/40 focus:border-[#F5B23D]'
-              }`}
+              className="w-full bg-transparent text-xl font-mono tracking-[0.4em] text-center text-[#F5B23D] placeholder-[#5A6478] focus:outline-none"
             />
           </div>
           {errors.code && (

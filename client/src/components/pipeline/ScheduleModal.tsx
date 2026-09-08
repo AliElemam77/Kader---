@@ -246,17 +246,17 @@ export const ScheduleModal: FC<ScheduleModalProps> = ({
                         ? (isAr ? 'رابط المقابلة' : 'Meeting Link')
                         : (isAr ? 'مكان المقابلة' : 'Meeting Location')}
                     </label>
-                    <div className="relative">
+                    <div className="flex items-center w-full px-3 py-2 bg-[#070A14] border border-white/10 rounded-xl focus-within:ring-2 focus-within:ring-[#35D6A4]/40 focus-within:border-[#35D6A4] transition-all">
                       {selectedModality === 'ONLINE' ? (
-                        <LinkIcon size={14} className="absolute inset-inline-start-3 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+                        <LinkIcon size={14} className="text-[#8892A6] shrink-0 me-2.5" />
                       ) : (
-                        <MapPin size={14} className="absolute inset-inline-start-3 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+                        <MapPin size={14} className="text-[#8892A6] shrink-0 me-2.5" />
                       )}
                       <input
                         type="text"
                         placeholder={selectedModality === 'ONLINE' ? 'https://meet.google.com/...' : 'مقر الشركة'}
                         {...register('locationOrLink')}
-                        className="w-full ps-9 pe-3 py-2 bg-[#070A14] border border-white/10 rounded-xl text-xs text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none focus:ring-2 focus:ring-[#35D6A4]/40 focus:border-[#35D6A4]"
+                        className="w-full bg-transparent text-xs text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none"
                       />
                     </div>
                   </div>
@@ -266,13 +266,13 @@ export const ScheduleModal: FC<ScheduleModalProps> = ({
                     <label className="block text-[11px] font-semibold text-[#8892A6] mb-1">
                       {isAr ? 'القائم بالمقابلة' : 'Interviewer Name'}
                     </label>
-                    <div className="relative">
-                      <User size={14} className="absolute inset-inline-start-3 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+                    <div className="flex items-center w-full px-3 py-2 bg-[#070A14] border border-white/10 rounded-xl focus-within:ring-2 focus-within:ring-[#35D6A4]/40 focus-within:border-[#35D6A4] transition-all">
+                      <User size={14} className="text-[#8892A6] shrink-0 me-2.5" />
                       <input
                         type="text"
                         placeholder="سارة الغامدي (HR Lead)"
                         {...register('interviewerName')}
-                        className="w-full ps-9 pe-3 py-2 bg-[#070A14] border border-white/10 rounded-xl text-xs text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none focus:ring-2 focus:ring-[#35D6A4]/40 focus:border-[#35D6A4]"
+                        className="w-full bg-transparent text-xs text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none"
                       />
                     </div>
                   </div>
