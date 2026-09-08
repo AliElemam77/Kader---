@@ -170,7 +170,7 @@ export class MailService {
         subject: 'Hire ATS — SMTP Test Email (تجربة إرسال الإيميل)',
         html: `
           <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; background: #0f172a; color: #f8fafc; border-radius: 12px; direction: rtl; text-align: right;">
-            <h2 style="color: #10b981; margin-top: 0;">✅ تم الاتصال بخادم البريد بنجاح!</h2>
+            <h2 style="color: #10b981; margin-top: 0;">تم الاتصال بخادم البريد بنجاح!</h2>
             <p style="color: #cbd5e1;">تهانينا! نظام البريد في Hire ATS متصل بنجاح ويرسل الإيميلات الحقيقية إلى بريدك مباشرة باللغة العربية ومحاذاة RTL.</p>
             <div style="background: #1e293b; padding: 12px 16px; border-radius: 8px; margin: 16px 0; font-family: monospace; font-size: 13px; color: #38bdf8; text-align: left; direction: ltr;">
               Sender: ${env.EMAIL_FROM}<br/>

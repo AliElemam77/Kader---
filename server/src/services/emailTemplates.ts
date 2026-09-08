@@ -122,7 +122,7 @@ function buildMasterEmailLayout(params: {
                   ? `
                 <div style="background-color: #FEF9EE; border: 1px solid #FDE68A; border-radius: 16px; padding: 14px 18px; text-align: left; margin: 24px 0 18px 0;">
                   <div style="font-size: 12.5px; font-weight: 700; color: #92400E; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                    <span style="font-size: 14px;">⚠️</span> ${alertBoxTitle}
+                    ${alertBoxTitle}
                   </div>
                   <div style="font-size: 11.5px; color: #A16207; line-height: 1.55;">
                     ${alertBoxContent}
@@ -168,14 +168,14 @@ function buildMasterEmailLayout(params: {
                 <a href="https://linkedin.com" target="_blank" style="display: inline-block; width: 34px; height: 34px; border-radius: 50%; background: #ffffff; margin: 0 5px; text-align: center; line-height: 34px; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 14px; vertical-align: middle; color: #0284c7; font-weight: bold;">
                   in
                 </a>
-                <a href="https://kader.sa" target="_blank" style="display: inline-block; width: 34px; height: 34px; border-radius: 50%; background: #ffffff; margin: 0 5px; text-align: center; line-height: 34px; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 14px; vertical-align: middle;">
-                  🌐
+                <a href="https://kader.sa" target="_blank" style="display: inline-block; width: 34px; height: 34px; border-radius: 50%; background: #ffffff; margin: 0 5px; text-align: center; line-height: 34px; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 11px; vertical-align: middle; color: #0284c7; font-weight: 800; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                  web
                 </a>
               </div>
 
               <!-- Copyright & Contact Information -->
               <p style="color: #93c5fd; font-size: 12px; font-weight: 500; margin: 0 0 6px 0; letter-spacing: 0.2px;">
-                All rights reserved to Kader (كادر) ATS © 2026.
+                All rights reserved to Kader (كادر) ATS &copy; 2026.
               </p>
               <p style="color: #60a5fa; font-size: 11px; margin: 0; opacity: 0.9;">
                 Email: support@kader.sa &bull; One track from apply to hire.
@@ -239,7 +239,7 @@ export function generateAuthOtpEmail(params: {
         Copy the 6-digit code above and click below to open the login page:
       </p>
       <a href="${loginPageUrl}" target="_blank" style="background: linear-gradient(135deg, #F5B23D 0%, #E29921 100%); color: #111827; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-weight: 700; display: inline-block; font-size: 13.5px; box-shadow: 0 4px 14px rgba(245, 178, 61, 0.35);">
-        🔐 Go to Login Page &bull; الانتقال لصفحة تسجيل الدخول
+        Go to Login Page &bull; الانتقال لصفحة تسجيل الدخول
       </a>
     </div>
   `;
@@ -254,7 +254,7 @@ export function generateAuthOtpEmail(params: {
     contentHtml,
     alertBoxTitle: 'Was this request not made by you?',
     alertBoxContent,
-    badgePillText: '🔒 جلسة آمنة &bull; Secure Auth Session &bull; Kader ATS',
+    badgePillText: 'جلسة آمنة &bull; Secure Auth Session &bull; Kader ATS',
     automatedNote: 'This is an automated security message. Please do not reply.',
   });
 }
@@ -277,14 +277,14 @@ export function generateApplicationReceivedEmail(params: {
       ? `
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; margin: 18px 0;">
           <p style="color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; margin: 0 0 10px 0; letter-spacing: 0.5px;">
-            🗺️ Hiring Pipeline Stages:
+            Hiring Pipeline Stages:
           </p>
           <div>
             ${stages
               .map(
                 (s, i) => `
               <span style="display: inline-block; background: ${i === 0 ? '#eff6ff' : '#ffffff'}; color: ${i === 0 ? '#2563eb' : '#64748b'}; border: 1px solid ${i === 0 ? '#93c5fd' : '#e2e8f0'}; font-size: 11.5px; font-weight: ${i === 0 ? '700' : '500'}; padding: 4px 10px; border-radius: 16px; margin: 3px;">
-                ${i + 1}. ${s.name} ${i === 0 ? '📍 (Current)' : ''}
+                ${i + 1}. ${s.name} ${i === 0 ? '(Current)' : ''}
               </span>
             `
               )
@@ -305,7 +305,7 @@ export function generateApplicationReceivedEmail(params: {
     <!-- Current Stage Highlight Box -->
     <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #a7f3d0; border-radius: 14px; padding: 16px 18px; margin: 16px 0;">
       <div style="font-size: 11.5px; color: #059669; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Your Current Hiring Stage:</div>
-      <div style="font-size: 17px; font-weight: 800; color: #047857; margin-top: 4px;">📍 ${initialStage}</div>
+      <div style="font-size: 17px; font-weight: 800; color: #047857; margin-top: 4px;">${initialStage}</div>
       <div style="font-size: 12px; color: #065f46; margin-top: 4px;">Our talent team will notify you automatically by email as your application advances.</div>
     </div>
 
@@ -346,7 +346,7 @@ export function generateStageTransitionEmail(params: {
     interviewCardHtml = `
       <div style="background: #f8fafc; padding: 18px 20px; border-radius: 14px; margin: 18px 0; border: 1px solid #e2e8f0; border-left: 4px solid #6366f1;">
         <h3 style="color: #4f46e5; margin: 0 0 12px 0; font-size: 14.5px; font-weight: 700;">
-          📅 Scheduled Interview Details:
+          Scheduled Interview Details:
         </h3>
         <table role="presentation" style="width: 100%; border-collapse: collapse; font-size: 13px; color: #334155;">
           <tr>
@@ -359,7 +359,7 @@ export function generateStageTransitionEmail(params: {
           </tr>
           <tr>
             <td style="padding: 5px 0; color: #64748b;"><strong>Modality:</strong></td>
-            <td style="padding: 5px 0; color: #0f172a;">${scheduledInterview.modality === 'ONLINE' ? '🌐 Video Call (Online)' : '🏢 In-Person (Office Headquarters)'}</td>
+            <td style="padding: 5px 0; color: #0f172a;">${scheduledInterview.modality === 'ONLINE' ? 'Video Call (Online)' : 'In-Person (Office Headquarters)'}</td>
           </tr>
           <tr>
             <td style="padding: 5px 0; color: #64748b;"><strong>Meeting Link / Place:</strong></td>
@@ -392,7 +392,7 @@ export function generateStageTransitionEmail(params: {
     taskCardHtml = `
       <div style="background: #f8fafc; padding: 18px 20px; border-radius: 14px; margin: 18px 0; border: 1px solid #e2e8f0; border-left: 4px solid #f59e0b;">
         <h3 style="color: #d97706; margin: 0 0 10px 0; font-size: 14.5px; font-weight: 700;">
-          📋 ${stageTask.title || 'Technical Task / Assignment Instructions:'}
+          ${stageTask.title || 'Technical Task / Assignment Instructions:'}
         </h3>
         ${
           stageTask.description
@@ -407,7 +407,7 @@ export function generateStageTransitionEmail(params: {
           stageTask.taskUrl
             ? `
           <div style="margin-bottom: 10px; font-size: 12.5px; background: #eff6ff; border: 1px solid #bfdbfe; padding: 8px 12px; border-radius: 8px;">
-            <strong style="color: #1d4ed8;">🔗 Task Repository / Resource:</strong>
+            <strong style="color: #1d4ed8;">Task Repository / Resource:</strong>
             <a href="${stageTask.taskUrl}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: 700; margin-left: 6px;">
               ${stageTask.taskUrl}
             </a>
@@ -419,7 +419,7 @@ export function generateStageTransitionEmail(params: {
           stageTask.deadline
             ? `
           <div style="font-size: 12px; background: #fef3c7; border: 1px solid #fde68a; padding: 6px 12px; border-radius: 6px; display: inline-block;">
-            <strong style="color: #b45309;">⏰ Submission Deadline:</strong>
+            <strong style="color: #b45309;">Submission Deadline:</strong>
             <span style="color: #78350f; font-weight: 700; margin-left: 4px;">${stageTask.deadline}</span>
           </div>
         `
@@ -433,7 +433,7 @@ export function generateStageTransitionEmail(params: {
   if (stageNotes) {
     notesCardHtml = `
       <div style="background: #f1f5f9; padding: 14px 18px; border-radius: 12px; margin: 16px 0; border-left: 4px solid #64748b;">
-        <div style="color: #334155; font-size: 12px; font-weight: 700; margin-bottom: 4px;">📝 Note from the Hiring Team:</div>
+        <div style="color: #334155; font-size: 12px; font-weight: 700; margin-bottom: 4px;">Note from the Hiring Team:</div>
         <div style="color: #475569; font-size: 13px; line-height: 1.5; white-space: pre-wrap;">${stageNotes}</div>
       </div>
     `;
@@ -450,7 +450,7 @@ export function generateStageTransitionEmail(params: {
     <!-- Stage Announcement Badge -->
     <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #93c5fd; border-radius: 14px; padding: 16px 18px; text-align: center; margin: 16px 0;">
       <div style="font-size: 11px; color: #1d4ed8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">New Stage:</div>
-      <div style="font-size: 18px; font-weight: 800; color: #1e40af; margin-top: 3px;">🚀 ${stageName}</div>
+      <div style="font-size: 18px; font-weight: 800; color: #1e40af; margin-top: 3px;">${stageName}</div>
     </div>
 
     ${interviewCardHtml}
@@ -491,7 +491,6 @@ export function generateHiredEmail(params: {
     </p>
 
     <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #6ee7b7; border-radius: 14px; padding: 18px 20px; margin: 18px 0; text-align: center;">
-      <div style="font-size: 24px; margin-bottom: 6px;">🎉</div>
       <div style="font-size: 18px; font-weight: 800; color: #047857;">Job Offer Extended!</div>
       <div style="font-size: 12.5px; color: #065f46; margin-top: 4px;">Welcome to our growing team. We look forward to achieving great things together!</div>
     </div>
@@ -502,7 +501,7 @@ export function generateHiredEmail(params: {
   `;
 
   return buildMasterEmailLayout({
-    title: 'Congratulations on Your Offer! 🎉',
+    title: 'Congratulations on Your Offer!',
     subtitle: `Offer of Employment: ${jobTitle}`,
     contentHtml,
     alertBoxTitle: 'Welcome to the Team!',

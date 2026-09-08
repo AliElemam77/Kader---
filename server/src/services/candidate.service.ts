@@ -114,7 +114,7 @@ export class CandidateService {
 
         MailService.sendEmail({
           to: candidate.email,
-          subject: `Congratulations! Offer of Employment for ${updated.job.title} 🎉`,
+          subject: `Congratulations! Offer of Employment for ${updated.job.title}`,
           html: emailHtml,
           type: 'STAGE_UPDATE',
         }).catch((err) => {
