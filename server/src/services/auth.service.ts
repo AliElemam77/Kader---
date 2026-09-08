@@ -5,6 +5,7 @@ import { env } from '../config/env';
 import { MailService } from './mail.service';
 import { generateAuthOtpEmail } from './emailTemplates';
 import { AuthUser, JwtPayload } from '../types/auth.types';
+import { getEffectiveClientUrl } from '../utils/network';
 
 export class AuthService {
   // Ensure default admin exists for easy initial onboarding
@@ -34,9 +35,15 @@ export class AuthService {
     // For first-time local development ease, allow auto-creating admin if none exist
     if (!user) {
       const usersCount = await prisma.user.count();
-      if (usersCount === 0 || normalizedEmail.includes('admin') || normalizedEmail.includes('hire-ats')) {
+      if (
+        usersCount === 0 ||
+        normalizedEmail.includes('admin') ||
+        normalizedEmail.includes('hire-ats') ||
+        normalizedEmail === 'alielemam515@gmail.com' ||
+        normalizedEmail === 'ali.elemam888@gmail.com'
+      ) {
         const isRecruiter = normalizedEmail.includes('recruiter');
-        const role = isRecruiter ? 'RECRUITER' : (normalizedEmail.includes('admin') || usersCount === 0 ? 'HR_MANAGER' : 'RECRUITER');
+        const role = isRecruiter ? 'RECRUITER' : 'HR_MANAGER';
         user = await prisma.user.create({
           data: {
             email: normalizedEmail,
@@ -79,7 +86,8 @@ export class AuthService {
       },
     });
 
-    const loginPageUrl = `${env.CLIENT_URL}/?auth=login&email=${encodeURIComponent(normalizedEmail)}`;
+    const clientBaseUrl = getEffectiveClientUrl();
+    const loginPageUrl = `${clientBaseUrl}/?auth=login&email=${encodeURIComponent(normalizedEmail)}`;
 
     // Send Email (6-digit OTP + Direct link to Login Page)
     const emailHtml = generateAuthOtpEmail({
