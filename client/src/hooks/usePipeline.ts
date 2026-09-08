@@ -284,10 +284,6 @@ export function usePipeline(token: string | null) {
     const targetStage = stages.find((s) => s.id === targetStageId);
     if (!targetStage) return;
 
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const defaultDate = tomorrow.toISOString().split('T')[0];
-
     const isInterview = !!(targetStage.requiresScheduling || targetStage.stageType === 'INTERVIEW');
     const isTaskStage = !!(
       targetStage.defaultTask ||
@@ -300,6 +296,33 @@ export function usePipeline(token: string | null) {
       targetStage.name.includes('اختبار') ||
       targetStage.name.includes('مشروع')
     );
+
+    // Fast-path: If stage does NOT require interview scheduling or task assessment, move immediately without modal clutter!
+    if (!isInterview && !isTaskStage) {
+      const isHiredStage =
+        targetStage.stageType === 'OFFER' ||
+        targetStage.name.toLowerCase().includes('hired') ||
+        targetStage.name.includes('عرض') ||
+        targetStage.name.includes('قبول');
+      const nextStatus = isHiredStage ? 'HIRED' : 'IN_PROGRESS';
+
+      executeStageTransition(
+        candidate.id,
+        targetStage.id,
+        nextStatus,
+        undefined,
+        undefined,
+        undefined,
+        isAr
+          ? `تم نقل ${candidate.name} إلى مرحلة "${targetStage.name}" بنجاح!`
+          : `Moved ${candidate.name} to "${targetStage.name}" successfully!`
+      );
+      return;
+    }
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const defaultDate = tomorrow.toISOString().split('T')[0];
 
     setSchedulingCandidate({ candidate, targetStage });
     scheduleForm.reset({
