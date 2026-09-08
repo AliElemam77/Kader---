@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { transporter, isSmtpConfigured, verifyMailer } from '../config/mailer';
+import { transporter, isSmtpConfigured, verifyMailer, buildTransporter } from '../config/mailer';
 import { env } from '../config/env';
 
 export interface DispatchedEmail {
