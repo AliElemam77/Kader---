@@ -10,6 +10,7 @@ import { TeamManagement } from './components/TeamManagement';
 import { HRLoginModal } from './components/HRLoginModal';
 import { OutboxModal } from './components/OutboxModal';
 import { API_BASE_URL } from './config/api';
+import { queryClient } from './config/queryClient';
 
 export interface AuthUser {
   id: string;
@@ -23,8 +24,15 @@ export function App() {
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
   const [loginInitialEmail, setLoginInitialEmail] = useState<string | undefined>(undefined);
   const [isOutboxOpen, setIsOutboxOpen] = useState<boolean>(false);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('ats_token'));
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('ats_token'));
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const saved = localStorage.getItem('ats_user');
+    try {
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // 1. Detect Direct Login Page Link & Email Pre-fill from Email
   useEffect(() => {
@@ -43,7 +51,7 @@ export function App() {
     }
   }, []);
 
-  // 2. Validate Existing Token on Startup
+  // 2. Validate Existing Token on Startup in background
   useEffect(() => {
     const storedToken = localStorage.getItem('ats_token');
     if (storedToken) {
@@ -54,8 +62,8 @@ export function App() {
         .then((res) => {
           if (res.success && res.data) {
             setUser(res.data);
+            localStorage.setItem('ats_user', JSON.stringify(res.data));
             setToken(storedToken);
-            setActiveTab('pipeline');
           } else {
             handleLogout(false);
           }
@@ -64,12 +72,12 @@ export function App() {
     } else {
       setUser(null);
       setToken(null);
-      setActiveTab('careers');
     }
   }, []);
 
   const handleLoginSuccess = (newToken: string, newUser: AuthUser) => {
     localStorage.setItem('ats_token', newToken);
+    localStorage.setItem('ats_user', JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
     setActiveTab('pipeline');
@@ -79,11 +87,14 @@ export function App() {
   useEffect(() => {
     if (user && user.role !== 'HR_MANAGER' && activeTab === 'team') {
       setActiveTab('pipeline');
+      toast.warning('تبويب إدارة الفريق وصلاحيات الأعضاء متاح فقط لمدير الموارد البشرية (HR Manager)');
     }
   }, [user, activeTab]);
 
   const handleLogout = (showToast = true) => {
     localStorage.removeItem('ats_token');
+    localStorage.removeItem('ats_user');
+    queryClient.clear();
     setToken(null);
     setUser(null);
     setActiveTab('careers');

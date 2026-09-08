@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '../config/api';
+import { queryKeys } from '../config/queryKeys';
 
 export interface DispatchedEmail {
   id: string;
@@ -35,32 +37,69 @@ export interface OutboxData {
 }
 
 export function useOutbox(isOpen: boolean) {
-  const [data, setData] = useState<OutboxData | null>(null);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [testEmail, setTestEmail] = useState('');
-  const [sendingTest, setSendingTest] = useState(false);
   const [previewEmail, setPreviewEmail] = useState<DispatchedEmail | null>(null);
 
-  const fetchOutbox = async () => {
-    setLoading(true);
-    try {
+  // Cached Outbox Query
+  const {
+    data = null,
+    isLoading: loading,
+    refetch: fetchOutbox,
+  } = useQuery<OutboxData | null>({
+    queryKey: queryKeys.outbox.all,
+    enabled: isOpen,
+    queryFn: async () => {
       const res = await fetch(`${API_BASE_URL}/mail/outbox`);
       const json = await res.json();
       if (json.success) {
-        setData(json.data);
+        return json.data;
       }
-    } catch {
-      toast.error('Failed to load email outbox');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return null;
+    },
+  });
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchOutbox();
-    }
-  }, [isOpen]);
+  // Test Email Mutation
+  const testMutation = useMutation({
+    mutationFn: async (targetEmail: string) => {
+      const res = await fetch(`${API_BASE_URL}/mail/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.message || 'Failed to send test email');
+      return json;
+    },
+    onSuccess: (json) => {
+      toast.success(json.message || 'Test email sent successfully!');
+      setTestEmail('');
+      queryClient.invalidateQueries({ queryKey: queryKeys.outbox.all });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to send test email', {
+        description: 'Check your Gmail App Password in server/.env',
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.outbox.all });
+    },
+  });
+
+  // Clear Outbox Mutation
+  const clearMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/mail/outbox`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json.success) throw new Error('Error clearing outbox');
+      return json;
+    },
+    onSuccess: () => {
+      toast.success('Outbox cleared');
+      queryClient.invalidateQueries({ queryKey: queryKeys.outbox.all });
+    },
+    onError: () => {
+      toast.error('Error clearing outbox');
+    },
+  });
 
   const handleSendTest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,44 +107,11 @@ export function useOutbox(isOpen: boolean) {
       toast.error('Please enter a valid email address');
       return;
     }
-
-    setSendingTest(true);
-    const toastId = toast.loading(`Sending test email to ${testEmail}...`);
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/mail/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: testEmail }),
-      });
-      const json = await res.json();
-
-      if (json.success) {
-        toast.success(json.message || 'Test email sent successfully!', { id: toastId });
-        setTestEmail('');
-        fetchOutbox();
-      } else {
-        toast.error(json.message || 'Failed to send test email', {
-          id: toastId,
-          description: 'Check your Gmail App Password in server/.env',
-        });
-        fetchOutbox();
-      }
-    } catch {
-      toast.error('Network error testing SMTP', { id: toastId });
-    } finally {
-      setSendingTest(false);
-    }
+    testMutation.mutate(testEmail);
   };
 
   const handleClearOutbox = async () => {
-    try {
-      await fetch(`${API_BASE_URL}/mail/outbox`, { method: 'DELETE' });
-      toast.success('Outbox cleared');
-      fetchOutbox();
-    } catch {
-      toast.error('Error clearing outbox');
-    }
+    clearMutation.mutate();
   };
 
   return {
@@ -113,7 +119,7 @@ export function useOutbox(isOpen: boolean) {
     loading,
     testEmail,
     setTestEmail,
-    sendingTest,
+    sendingTest: testMutation.isPending,
     previewEmail,
     setPreviewEmail,
     fetchOutbox,

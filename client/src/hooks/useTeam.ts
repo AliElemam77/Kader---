@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '../config/api';
+import { queryKeys } from '../config/queryKeys';
 
 export interface TeamMember {
   id: string;
@@ -32,13 +34,11 @@ export const editSchema = z.object({
 export type EditFormValues = z.infer<typeof editSchema>;
 
 export function useTeam(token: string) {
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Edit and Delete Modals
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [deletingMember, setDeletingMember] = useState<TeamMember | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Invite Form
   const inviteForm = useForm<InviteFormValues>({
@@ -53,31 +53,29 @@ export function useTeam(token: string) {
     resolver: zodResolver(editSchema),
   });
 
-  const fetchTeam = () => {
-    fetch(`${API_BASE_URL}/team`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success && res.data) {
-          setMembers(res.data);
-        }
-      })
-      .catch((err) => {
-        console.warn('Could not fetch team members:', err);
-        toast.error('Failed to load team members');
-      })
-      .finally(() => setLoading(false));
-  };
+  // Cached Team Members Query
+  const {
+    data: members = [],
+    isLoading: loading,
+    refetch: fetchTeam,
+  } = useQuery<TeamMember[]>({
+    queryKey: queryKeys.team.all,
+    enabled: !!token,
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/team`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const resJson = await res.json();
+      if (resJson.success && Array.isArray(resJson.data)) {
+        return resJson.data;
+      }
+      return [];
+    },
+  });
 
-  useEffect(() => {
-    fetchTeam();
-  }, [token]);
-
-  // Handle Invite Member
-  const onInviteMember = async (data: InviteFormValues) => {
-    const toastId = toast.loading(`Dispatching invitation to ${data.email}...`);
-    try {
+  // Invite Member Mutation
+  const inviteMutation = useMutation({
+    mutationFn: async (data: InviteFormValues) => {
       const res = await fetch(`${API_BASE_URL}/team/invite`, {
         method: 'POST',
         headers: {
@@ -87,17 +85,71 @@ export function useTeam(token: string) {
         body: JSON.stringify(data),
       });
       const resJson = await res.json();
+      if (!resJson.success) throw new Error(resJson.message || 'Failed to invite member');
+      return resJson;
+    },
+    onSuccess: (_, variables) => {
+      toast.success(`Invitation sent to ${variables.email}!`);
+      inviteForm.reset();
+      queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Network error inviting team member');
+    },
+  });
 
-      if (resJson.success) {
-        toast.success(`Invitation sent to ${data.email}!`, { id: toastId });
-        inviteForm.reset();
-        fetchTeam();
-      } else {
-        toast.error(resJson.message || 'Failed to invite member', { id: toastId });
+  // Edit Member Mutation
+  const editMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: EditFormValues }) => {
+      const res = await fetch(`${API_BASE_URL}/team/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      const resJson = await res.json();
+      if (!resJson.success) throw new Error(resJson.message || 'Failed to update member');
+      return resJson;
+    },
+    onSuccess: (_, { data }) => {
+      toast.success(`Updated ${data.name} successfully!`);
+      setEditingMember(null);
+      editForm.reset();
+      queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Network error updating member');
+    },
+  });
+
+  // Delete Member Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${API_BASE_URL}/team/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const resJson = await res.json();
+      if (!resJson.success) throw new Error(resJson.message || 'Failed to remove member');
+      return resJson;
+    },
+    onSuccess: () => {
+      if (deletingMember) {
+        toast.success(`Removed ${deletingMember.name} from workspace.`);
       }
-    } catch {
-      toast.error('Network error inviting team member', { id: toastId });
-    }
+      setDeletingMember(null);
+      queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Error removing team member');
+    },
+  });
+
+  // Handle Invite Member
+  const onInviteMember = async (data: InviteFormValues) => {
+    inviteMutation.mutate(data);
   };
 
   // Open Edit Modal
@@ -112,59 +164,13 @@ export function useTeam(token: string) {
   // Handle Save Edit
   const onSaveEdit = async (data: EditFormValues) => {
     if (!editingMember) return;
-
-    const toastId = toast.loading(`Updating ${editingMember.name}...`);
-    try {
-      const res = await fetch(`${API_BASE_URL}/team/${editingMember.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      const resJson = await res.json();
-
-      if (resJson.success) {
-        toast.success(`Updated ${data.name} successfully!`, { id: toastId });
-        setEditingMember(null);
-        editForm.reset();
-        fetchTeam();
-      } else {
-        toast.error(resJson.message || 'Failed to update member', { id: toastId });
-      }
-    } catch {
-      toast.error('Network error updating member', { id: toastId });
-    }
+    editMutation.mutate({ id: editingMember.id, data });
   };
 
   // Handle Delete Member
   const onConfirmDelete = async () => {
     if (!deletingMember) return;
-
-    setIsDeleting(true);
-    const toastId = toast.loading(`Removing ${deletingMember.name} from team...`);
-    try {
-      const res = await fetch(`${API_BASE_URL}/team/${deletingMember.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const resJson = await res.json();
-
-      if (resJson.success) {
-        toast.success(`Removed ${deletingMember.name} from workspace.`, { id: toastId });
-        setDeletingMember(null);
-        fetchTeam();
-      } else {
-        toast.error(resJson.message || 'Failed to remove member', { id: toastId });
-      }
-    } catch {
-      toast.error('Error removing team member', { id: toastId });
-    } finally {
-      setIsDeleting(false);
-    }
+    deleteMutation.mutate(deletingMember.id);
   };
 
   return {
@@ -174,7 +180,7 @@ export function useTeam(token: string) {
     setEditingMember,
     deletingMember,
     setDeletingMember,
-    isDeleting,
+    isDeleting: deleteMutation.isPending,
     inviteForm,
     editForm,
     fetchTeam,

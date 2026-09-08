@@ -3,8 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Candidate, PipelineStage, ScheduledInterview, InterviewModality, StageType, Job, StageTask } from '../types/ats';
 import { API_BASE_URL } from '../config/api';
+import { queryKeys } from '../config/queryKeys';
 
 export const stageSchema = z.object({
   name: z.string().min(2, 'Stage name must be at least 2 characters'),
@@ -45,11 +47,93 @@ export const REJECTION_PRESETS = [
 ];
 
 export function usePipeline(token: string | null) {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string>('');
+  const queryClient = useQueryClient();
+
+  const [selectedJobId, setSelectedJobId] = useState<string>(() => {
+    return localStorage.getItem('ats_selected_job_id') || '';
+  });
   const [stages, setStages] = useState<PipelineStage[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // 1. Cached Jobs Query (Instant from memory)
+  const { data: jobs = [], isLoading: jobsLoading } = useQuery<Job[]>({
+    queryKey: queryKeys.jobs.public,
+    queryFn: async () => {
+      const jobsRes = await fetch(`${API_BASE_URL}/public/jobs`);
+      const jobsData = await jobsRes.json();
+      if (jobsData.success && Array.isArray(jobsData.data)) {
+        return jobsData.data;
+      }
+      return [];
+    },
+  });
+
+  // Automatically select the saved or first available job
+  useEffect(() => {
+    if (jobs.length > 0) {
+      const savedJobId = localStorage.getItem('ats_selected_job_id');
+      const validJob =
+        (savedJobId && jobs.find((j: Job) => j.id === savedJobId)) || jobs[0];
+
+      if (!selectedJobId || !jobs.some((j) => j.id === selectedJobId)) {
+        setSelectedJobId(validJob.id);
+        localStorage.setItem('ats_selected_job_id', validJob.id);
+      }
+    }
+  }, [jobs, selectedJobId]);
+
+  // Synchronize stages with the selected job
+  useEffect(() => {
+    if (jobs.length > 0 && selectedJobId) {
+      const currentJob = jobs.find((j) => j.id === selectedJobId) || jobs[0];
+      if (currentJob?.pipelineStages) {
+        setStages(currentJob.pipelineStages);
+      }
+    }
+  }, [jobs, selectedJobId]);
+
+  // 2. Cached Candidates Query for selected job
+  const { data: serverCandidates = [], isLoading: candidatesLoading } = useQuery<Candidate[]>({
+    queryKey: queryKeys.candidates.byJob(selectedJobId),
+    enabled: !!selectedJobId,
+    queryFn: async () => {
+      const candidatesRes = await fetch(
+        `${API_BASE_URL}/candidates?jobId=${selectedJobId}`,
+        {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+      const candidatesData = await candidatesRes.json();
+      if (candidatesData.success && Array.isArray(candidatesData.data)) {
+        return candidatesData.data;
+      }
+      return [];
+    },
+  });
+
+  // Sync serverCandidates into local state for optimistic drag-and-drop & editing
+  useEffect(() => {
+    if (serverCandidates) {
+      setCandidates(serverCandidates);
+    }
+  }, [serverCandidates]);
+
+  // Intelligent non-blocking loading: only true if zero data exists in cache
+  const loading = jobsLoading || (!!selectedJobId && candidatesLoading && candidates.length === 0);
+
+  // Backward-compatible fetchData
+  const fetchData = async (targetJobId?: string) => {
+    if (targetJobId) {
+      setSelectedJobId(targetJobId);
+      localStorage.setItem('ats_selected_job_id', targetJobId);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(targetJobId) });
+    } else {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
+      if (selectedJobId) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
+      }
+    }
+  };
 
   // Drag & Drop State
   const [dragType, setDragType] = useState<'CANDIDATE' | 'STAGE' | null>(null);
@@ -114,57 +198,10 @@ export function usePipeline(token: string | null) {
     },
   });
 
-  // Fetch Jobs & Candidates from PostgreSQL
-  const fetchData = async (targetJobId?: string) => {
-    setLoading(true);
-    try {
-      const jobsRes = await fetch(`${API_BASE_URL}/public/jobs`);
-      const jobsData = await jobsRes.json();
-
-      if (jobsData.success && jobsData.data.length > 0) {
-        setJobs(jobsData.data);
-        const savedJobId = localStorage.getItem('ats_selected_job_id');
-        const currentJobId =
-          targetJobId ||
-          (savedJobId && jobsData.data.some((j: Job) => j.id === savedJobId)
-            ? savedJobId
-            : selectedJobId || jobsData.data[0].id);
-
-        setSelectedJobId(currentJobId);
-        localStorage.setItem('ats_selected_job_id', currentJobId);
-
-        const currentJob = jobsData.data.find((j: Job) => j.id === currentJobId) || jobsData.data[0];
-        setStages(currentJob.pipelineStages || []);
-
-        const candidatesRes = await fetch(
-          `${API_BASE_URL}/candidates?jobId=${currentJob.id}`,
-          {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          }
-        );
-        const candidatesData = await candidatesRes.json();
-
-        if (candidatesData.success && candidatesData.data) {
-          setCandidates(candidatesData.data);
-        }
-      }
-    } catch (err) {
-      console.warn('Error fetching live data from PostgreSQL:', err);
-      toast.error('Failed to sync live candidates from PostgreSQL');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [token]);
-
   // Job selection
   const handleSelectJob = (jobId: string) => {
     setSelectedJobId(jobId);
     localStorage.setItem('ats_selected_job_id', jobId);
-    fetchData(jobId);
   };
 
   // Stage transition execution
@@ -227,6 +264,7 @@ export function usePipeline(token: string | null) {
           );
         }
 
+        queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
         toast.success(customSuccessMessage || 'Candidate moved and notification dispatched!', { id: toastId });
       } else {
         toast.error(resJson.message || 'Error updating candidate stage', { id: toastId });
@@ -298,6 +336,8 @@ export function usePipeline(token: string | null) {
       });
       const resJson = await res.json();
       if (resJson.success) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
         toast.success('Stage order reordered and saved in PostgreSQL!', { id: toastId });
       } else {
         toast.error(resJson.message || 'Failed to save stage order', { id: toastId });
@@ -362,6 +402,8 @@ export function usePipeline(token: string | null) {
       if (resJson.success) {
         setStages(updatedStages);
         setEditingStage(null);
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
         toast.success(`Stage "${editName.trim()}" updated in PostgreSQL!`, { id: toastId });
       } else {
         toast.error(resJson.message || 'Error updating stage', { id: toastId });
@@ -405,6 +447,9 @@ export function usePipeline(token: string | null) {
         );
 
         setDeletingStage(null);
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
         toast.success(`Stage "${stage.name}" deleted! Any candidates were moved safely to "${fallbackStage.name}"`, {
           id: toastId,
         });
@@ -452,6 +497,8 @@ export function usePipeline(token: string | null) {
         setStages((prev) => [...prev, newStage]);
         setIsAddStageOpen(false);
         stageForm.reset();
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
         toast.success(`Created stage "${data.name}" and saved to PostgreSQL!`, { id: toastId });
       } else {
         toast.error(resJson.message || 'Error saving custom stage', { id: toastId });
@@ -511,6 +558,7 @@ export function usePipeline(token: string | null) {
           );
         }
 
+        queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
         toast.success(`تم استبعاد المتقدم وإرسال التغذية الراجعة إلى بريده الإلكتروني`, { id: toastId });
         setRejectingCandidate(null);
         setRejectionReason('');
@@ -562,6 +610,7 @@ export function usePipeline(token: string | null) {
           );
         }
 
+        queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
         toast.success(`تم التراجع عن استبعاد ${candidate.name} وإعادته للمراحل النشطة بنجاح!`, { id: toastId });
       } else {
         toast.error(resJson.message || 'فشل التراجع عن الاستبعاد', { id: toastId });
@@ -595,6 +644,7 @@ export function usePipeline(token: string | null) {
           setSelectedCandidate(null);
         }
         setDeletingCandidate(null);
+        queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
         toast.success(`تم حذف المتقدم "${candidateName}" بنجاح!`, { id: toastId });
       } else {
         toast.error(resJson.message || 'فشل حذف المتقدم', { id: toastId });

@@ -3,8 +3,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { FormField, FieldType, Job } from '../types/ats';
 import { API_BASE_URL } from '../config/api';
+import { queryKeys } from '../config/queryKeys';
 
 export const newFieldSchema = z.object({
   label: z.string().min(2, 'Question label must be at least 2 characters'),
@@ -32,7 +34,7 @@ export const DEFAULT_FIELDS: FormField[] = [
 ];
 
 export function useFormBuilder() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const queryClient = useQueryClient();
   const [selectedJobId, setSelectedJobId] = useState<string>('');
   const [fields, setFields] = useState<FormField[]>(DEFAULT_FIELDS);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -46,30 +48,34 @@ export function useFormBuilder() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  // Load jobs and initial form fields
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/public/jobs`);
-        const data = await res.json();
-        if (data.success && data.data.length > 0) {
-          setJobs(data.data);
-          const savedJobId = localStorage.getItem('ats_builder_job_id');
-          const initialJob =
-            (savedJobId && data.data.find((j: Job) => j.id === savedJobId)) || data.data[0];
-
-          setSelectedJobId(initialJob.id);
-          if (initialJob.formFields && initialJob.formFields.length > 0) {
-            setFields(initialJob.formFields);
-          }
-        }
-      } catch (err) {
-        console.warn('Could not load jobs for form builder:', err);
+  // Cached Jobs for Form Builder
+  const { data: jobs = [] } = useQuery<Job[]>({
+    queryKey: queryKeys.jobs.public,
+    queryFn: async () => {
+      const res = await fetch(`${API_BASE_URL}/public/jobs`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        return data.data;
       }
-    };
+      return [];
+    },
+  });
 
-    fetchJobs();
-  }, []);
+  // Sync initial selected job and fields when jobs load
+  useEffect(() => {
+    if (jobs.length > 0) {
+      const savedJobId = localStorage.getItem('ats_builder_job_id');
+      const initialJob =
+        (savedJobId && jobs.find((j: Job) => j.id === savedJobId)) || jobs[0];
+
+      if (!selectedJobId || !jobs.some((j) => j.id === selectedJobId)) {
+        setSelectedJobId(initialJob.id);
+        if (initialJob.formFields && initialJob.formFields.length > 0) {
+          setFields(initialJob.formFields);
+        }
+      }
+    }
+  }, [jobs, selectedJobId]);
 
   const handleSelectJob = async (jobId: string) => {
     setSelectedJobId(jobId);
@@ -82,9 +88,6 @@ export function useFormBuilder() {
         const job = data.data;
         if (job.formFields && job.formFields.length > 0) {
           setFields(job.formFields);
-          setJobs((prev) =>
-            prev.map((j) => (j.id === jobId ? { ...j, formFields: job.formFields } : j))
-          );
           setHasUnsavedChanges(false);
           return;
         }
@@ -133,9 +136,8 @@ export function useFormBuilder() {
       const resJson = await res.json();
       if (resJson.success) {
         setHasUnsavedChanges(false);
-        setJobs((prev) =>
-          prev.map((j) => (j.id === jobId ? { ...j, formFields: updatedFields } : j))
-        );
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
       }
     } catch (err) {
       console.warn('Error saving form layout to database:', err);
