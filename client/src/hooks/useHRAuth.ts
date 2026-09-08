@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { API_BASE_URL } from '../config/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export const emailSchema = z.object({
   email: z.string().email('Please enter a valid work email address'),
@@ -21,6 +22,9 @@ export function useHRAuth(
   onClose: () => void,
   initialEmail?: string
 ) {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
+
   const [step, setStep] = useState<'EMAIL' | 'OTP'>(initialEmail ? 'OTP' : 'EMAIL');
   const [currentEmail, setCurrentEmail] = useState(initialEmail || '');
   const [devOtp, setDevOtp] = useState<string | null>(null);
@@ -44,7 +48,7 @@ export function useHRAuth(
 
   // Step 1: Request Access
   const onRequestAccess = async (data: EmailFormValues) => {
-    const toastId = toast.loading('Sending 6-digit verification code...');
+    const toastId = toast.loading(isAr ? 'جاري إرسال رمز التحقق...' : 'Sending 6-digit verification code...');
     try {
       const res = await fetch(`${API_BASE_URL}/auth/request-access`, {
         method: 'POST',
@@ -60,20 +64,20 @@ export function useHRAuth(
           setDevOtp(resJson.data.devOtp);
         }
         const successMsg = resJson.data?.emailSent
-          ? 'تم إرسال رمز التحقق لبريدك وهو متاح أيضاً بالأسفل!'
-          : 'تم تجهيز رمز الدخول المباشر (وضع المعاينة DEV)!';
+          ? (isAr ? 'تم إرسال رمز التحقق لبريدك الإلكتروني، وهو متوفر أيضاً على الشاشة!' : 'Verification code sent to your email and available on screen!')
+          : (isAr ? 'تم تجهيز رمز الدخول المباشر (وضع المعاينة DEV)!' : 'Direct login code generated (DEV Mode)!');
         toast.success(successMsg, { id: toastId });
       } else {
-        toast.error(resJson.message || 'Access denied', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'تم رفض طلب الدخول' : 'Access denied'), { id: toastId });
       }
     } catch {
-      toast.error('Network error requesting login code', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال أثناء طلب رمز الدخول' : 'Network error requesting login code', { id: toastId });
     }
   };
 
   // Step 2: Verify OTP
   const onVerifyOtp = async (data: OtpFormValues) => {
-    const toastId = toast.loading('Verifying code...');
+    const toastId = toast.loading(isAr ? 'جاري التحقق من الرمز...' : 'Verifying code...');
     try {
       const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
         method: 'POST',
@@ -83,14 +87,17 @@ export function useHRAuth(
       const resJson = await res.json();
 
       if (resJson.success && resJson.data?.token) {
-        toast.success(`Welcome, ${resJson.data.user.name}!`, { id: toastId });
+        const welcomeMsg = isAr
+          ? `تم تسجيل الدخول بنجاح! مرحباً بك يا ${resJson.data.user.name}`
+          : `Welcome back, ${resJson.data.user.name}!`;
+        toast.success(welcomeMsg, { id: toastId });
         onSuccess(resJson.data.token, resJson.data.user);
         onClose();
       } else {
-        toast.error(resJson.message || 'Invalid verification code', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'رمز التحقق غير صحيح أو منتهي الصلاحية' : 'Invalid or expired verification code'), { id: toastId });
       }
     } catch {
-      toast.error('Error verifying code', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال أثناء التحقق من الرمز' : 'Error verifying code', { id: toastId });
     }
   };
 

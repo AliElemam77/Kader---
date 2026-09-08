@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '../config/api';
 import { queryKeys } from '../config/queryKeys';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface TeamMember {
   id: string;
@@ -35,6 +36,8 @@ export type EditFormValues = z.infer<typeof editSchema>;
 
 export function useTeam(token: string) {
   const queryClient = useQueryClient();
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
 
   // Edit and Delete Modals
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
@@ -89,12 +92,12 @@ export function useTeam(token: string) {
       return resJson;
     },
     onSuccess: (_, variables) => {
-      toast.success(`Invitation sent to ${variables.email}!`);
+      toast.success(isAr ? `تم إرسال دعوة الانضمام إلى ${variables.email} بنجاح!` : `Invitation sent to ${variables.email}!`);
       inviteForm.reset();
       queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Network error inviting team member');
+      toast.error(err.message || (isAr ? 'خطأ في إرسال الدعوة إلى العضو' : 'Network error inviting team member'));
     },
   });
 
@@ -114,13 +117,13 @@ export function useTeam(token: string) {
       return resJson;
     },
     onSuccess: (_, { data }) => {
-      toast.success(`Updated ${data.name} successfully!`);
+      toast.success(isAr ? `تم تحديث بيانات ${data.name} بنجاح!` : `Updated ${data.name} successfully!`);
       setEditingMember(null);
       editForm.reset();
       queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Network error updating member');
+      toast.error(err.message || (isAr ? 'خطأ في تحديث بيانات العضو' : 'Network error updating member'));
     },
   });
 
@@ -137,13 +140,13 @@ export function useTeam(token: string) {
     },
     onSuccess: () => {
       if (deletingMember) {
-        toast.success(`Removed ${deletingMember.name} from workspace.`);
+        toast.success(isAr ? `تم حذف العضو ${deletingMember.name} من مساحة العمل بنجاح.` : `Removed ${deletingMember.name} from workspace.`);
       }
       setDeletingMember(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Error removing team member');
+      toast.error(err.message || (isAr ? 'خطأ أثناء حذف العضو' : 'Error removing team member'));
     },
   });
 

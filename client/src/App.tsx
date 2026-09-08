@@ -11,6 +11,7 @@ import { HRLoginModal } from './components/HRLoginModal';
 import { OutboxModal } from './components/OutboxModal';
 import { API_BASE_URL } from './config/api';
 import { queryClient } from './config/queryClient';
+import { useLanguage } from './context/LanguageContext';
 
 export interface AuthUser {
   id: string;
@@ -20,6 +21,9 @@ export interface AuthUser {
 }
 
 export function App() {
+  const { language, isRtl } = useLanguage();
+  const isAr = language === 'ar';
+
   const [activeTab, setActiveTab] = useState<'careers' | 'pipeline' | 'builder' | 'jobs' | 'team'>('careers');
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
   const [loginInitialEmail, setLoginInitialEmail] = useState<string | undefined>(undefined);
@@ -87,9 +91,13 @@ export function App() {
   useEffect(() => {
     if (user && user.role !== 'HR_MANAGER' && activeTab === 'team') {
       setActiveTab('pipeline');
-      toast.warning('تبويب إدارة الفريق وصلاحيات الأعضاء متاح فقط لمدير الموارد البشرية (HR Manager)');
+      toast.warning(
+        isAr
+          ? 'تبويب إدارة الفريق وصلاحيات الأعضاء متاح فقط لمدير الموارد البشرية (HR Manager)'
+          : 'Team management is restricted to HR Managers only'
+      );
     }
-  }, [user, activeTab]);
+  }, [user, activeTab, isAr]);
 
   const handleLogout = (showToast = true) => {
     localStorage.removeItem('ats_token');
@@ -99,7 +107,7 @@ export function App() {
     setUser(null);
     setActiveTab('careers');
     if (showToast) {
-      toast.info('تم تسجيل الخروج من مساحة العمل بنجاح');
+      toast.info(isAr ? 'تم تسجيل الخروج من مساحة العمل بنجاح' : 'Signed out of workspace successfully');
     }
   };
 
@@ -113,7 +121,13 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#070A14] text-[#EEF1F7] antialiased selection:bg-[#F5B23D]/20 selection:text-[#F5B23D]">
-      <Toaster richColors position="top-right" theme="dark" closeButton />
+      <Toaster
+        richColors
+        position={isRtl ? 'top-left' : 'top-right'}
+        dir={isRtl ? 'rtl' : 'ltr'}
+        theme="dark"
+        closeButton
+      />
 
       <Navbar
         activeTab={activeTab}
@@ -183,7 +197,6 @@ export function App() {
         }}
         onSuccess={(tok, usr) => {
           handleLoginSuccess(tok, usr);
-          toast.success(`مرحباً بك، ${usr.name}! تم تسجيل الدخول بنجاح`);
         }}
       />
 

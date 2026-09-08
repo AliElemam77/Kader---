@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '../config/api';
 import { queryKeys } from '../config/queryKeys';
+import { useLanguage } from '../context/LanguageContext';
 
 export interface DispatchedEmail {
   id: string;
@@ -38,6 +39,8 @@ export interface OutboxData {
 
 export function useOutbox(isOpen: boolean) {
   const queryClient = useQueryClient();
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
   const [testEmail, setTestEmail] = useState('');
   const [previewEmail, setPreviewEmail] = useState<DispatchedEmail | null>(null);
 
@@ -72,13 +75,13 @@ export function useOutbox(isOpen: boolean) {
       return json;
     },
     onSuccess: (json) => {
-      toast.success(json.message || 'Test email sent successfully!');
+      toast.success(isAr ? 'تم إرسال البريد التجريبي بنجاح!' : (json.message || 'Test email sent successfully!'));
       setTestEmail('');
       queryClient.invalidateQueries({ queryKey: queryKeys.outbox.all });
     },
     onError: (err: any) => {
-      toast.error(err.message || 'Failed to send test email', {
-        description: 'Check your Gmail App Password in server/.env',
+      toast.error(isAr ? 'فشل إرسال البريد التجريبي' : (err.message || 'Failed to send test email'), {
+        description: isAr ? 'تحقق من كلمة مرور التطبيق لـ Gmail في السيرفر' : 'Check your Gmail App Password in server/.env',
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.outbox.all });
     },
@@ -93,18 +96,18 @@ export function useOutbox(isOpen: boolean) {
       return json;
     },
     onSuccess: () => {
-      toast.success('Outbox cleared');
+      toast.success(isAr ? 'تم إفراغ صندوق البريد الصادر بنجاح' : 'Outbox cleared successfully');
       queryClient.invalidateQueries({ queryKey: queryKeys.outbox.all });
     },
     onError: () => {
-      toast.error('Error clearing outbox');
+      toast.error(isAr ? 'خطأ في إفراغ صندوق البريد الصادر' : 'Error clearing outbox');
     },
   });
 
   const handleSendTest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!testEmail || !testEmail.includes('@')) {
-      toast.error('Please enter a valid email address');
+      toast.error(isAr ? 'يرجى إدخال بريد إلكتروني صالح' : 'Please enter a valid email address');
       return;
     }
     testMutation.mutate(testEmail);

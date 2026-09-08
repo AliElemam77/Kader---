@@ -7,6 +7,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Candidate, PipelineStage, ScheduledInterview, InterviewModality, StageType, Job, StageTask } from '../types/ats';
 import { API_BASE_URL } from '../config/api';
 import { queryKeys } from '../config/queryKeys';
+import { useLanguage } from '../context/LanguageContext';
 
 export const stageSchema = z.object({
   name: z.string().min(2, 'Stage name must be at least 2 characters'),
@@ -48,6 +49,8 @@ export const REJECTION_PRESETS = [
 
 export function usePipeline(token: string | null) {
   const queryClient = useQueryClient();
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
 
   const [selectedJobId, setSelectedJobId] = useState<string>(() => {
     return localStorage.getItem('ats_selected_job_id') || '';
@@ -214,7 +217,7 @@ export function usePipeline(token: string | null) {
     stageNotes?: string,
     customSuccessMessage?: string
   ) => {
-    const toastId = toast.loading('Saving candidate updates to PostgreSQL...');
+    const toastId = toast.loading(isAr ? 'جاري حفظ تحديثات المرشح...' : 'Saving candidate updates...');
 
     try {
       const res = await fetch(`${API_BASE_URL}/candidates/${candidateId}/stage`, {
@@ -265,12 +268,12 @@ export function usePipeline(token: string | null) {
         }
 
         queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
-        toast.success(customSuccessMessage || 'Candidate moved and notification dispatched!', { id: toastId });
+        toast.success(customSuccessMessage || (isAr ? 'تم نقل المرشح وإرسال الإشعار بنجاح!' : 'Candidate moved and notification dispatched!'), { id: toastId });
       } else {
-        toast.error(resJson.message || 'Error updating candidate stage', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'خطأ في تحديث مرحلة المرشح' : 'Error updating candidate stage'), { id: toastId });
       }
     } catch {
-      toast.error('Network error communicating with server', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال بالخادم' : 'Network error communicating with server', { id: toastId });
     }
   };
 
@@ -324,7 +327,7 @@ export function usePipeline(token: string | null) {
   const saveReorderedStages = async (newStages: PipelineStage[]) => {
     if (!selectedJobId) return;
     setStages(newStages);
-    const toastId = toast.loading('Saving updated stage sequence to PostgreSQL...');
+    const toastId = toast.loading(isAr ? 'جاري حفظ ترتيب المراحل...' : 'Saving updated stage sequence...');
     try {
       const res = await fetch(`${API_BASE_URL}/jobs/${selectedJobId}/stages`, {
         method: 'PUT',
@@ -338,12 +341,12 @@ export function usePipeline(token: string | null) {
       if (resJson.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
-        toast.success('Stage order reordered and saved in PostgreSQL!', { id: toastId });
+        toast.success(isAr ? 'تم حفظ ترتيب المراحل بنجاح!' : 'Stage order reordered and saved successfully!', { id: toastId });
       } else {
-        toast.error(resJson.message || 'Failed to save stage order', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'فشل حفظ ترتيب المراحل' : 'Failed to save stage order'), { id: toastId });
       }
     } catch {
-      toast.error('Network error saving stage order', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال أثناء حفظ ترتيب المراحل' : 'Network error saving stage order', { id: toastId });
     }
   };
 
@@ -371,7 +374,7 @@ export function usePipeline(token: string | null) {
     e.preventDefault();
     if (!editingStage || !selectedJobId) return;
     if (!editName.trim()) {
-      toast.error('Stage name cannot be empty');
+      toast.error(isAr ? 'اسم المرحلة لا يمكن أن يكون فارغاً' : 'Stage name cannot be empty');
       return;
     }
 
@@ -388,7 +391,7 @@ export function usePipeline(token: string | null) {
       };
     });
 
-    const toastId = toast.loading('Saving stage updates to PostgreSQL...');
+    const toastId = toast.loading(isAr ? 'جاري حفظ تعديلات المرحلة...' : 'Saving stage updates...');
     try {
       const res = await fetch(`${API_BASE_URL}/jobs/${selectedJobId}/stages`, {
         method: 'PUT',
@@ -404,19 +407,19 @@ export function usePipeline(token: string | null) {
         setEditingStage(null);
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
-        toast.success(`Stage "${editName.trim()}" updated in PostgreSQL!`, { id: toastId });
+        toast.success(isAr ? `تم تحديث المرحلة "${editName.trim()}" بنجاح!` : `Stage "${editName.trim()}" updated successfully!`, { id: toastId });
       } else {
-        toast.error(resJson.message || 'Error updating stage', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'خطأ في تحديث المرحلة' : 'Error updating stage'), { id: toastId });
       }
     } catch {
-      toast.error('Network error updating stage', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال أثناء تحديث المرحلة' : 'Network error updating stage', { id: toastId });
     }
   };
 
   // Open Delete Stage Confirmation
   const handleOpenDeleteStage = (stage: PipelineStage, candidatesCount: number) => {
     if (stages.length <= 1) {
-      toast.error('A job pipeline must have at least one stage. You cannot delete the only stage.');
+      toast.error(isAr ? 'يجب أن يحتوي مسار التوظيف على مرحلة واحدة على الأقل. لا يمكنك حذف المرحلة الوحيدة.' : 'A job pipeline must have at least one stage. You cannot delete the only stage.');
       return;
     }
     setDeletingStage({ stage, candidatesCount });
@@ -427,7 +430,7 @@ export function usePipeline(token: string | null) {
     if (!deletingStage || !selectedJobId) return;
     const { stage } = deletingStage;
 
-    const toastId = toast.loading(`Deleting stage "${stage.name}" and migrating candidates...`);
+    const toastId = toast.loading(isAr ? `جاري حذف المرحلة "${stage.name}" ونقل المرشحين...` : `Deleting stage "${stage.name}" and migrating candidates...`);
     try {
       const res = await fetch(`${API_BASE_URL}/jobs/${selectedJobId}/stages/${stage.id}`, {
         method: 'DELETE',
@@ -450,14 +453,17 @@ export function usePipeline(token: string | null) {
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
         queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
-        toast.success(`Stage "${stage.name}" deleted! Any candidates were moved safely to "${fallbackStage.name}"`, {
-          id: toastId,
-        });
+        toast.success(
+          isAr
+            ? `تم حذف المرحلة "${stage.name}" ونقل المرشحين إلى "${fallbackStage.name}" بنجاح!`
+            : `Stage "${stage.name}" deleted! Candidates were moved safely to "${fallbackStage.name}"`,
+          { id: toastId }
+        );
       } else {
-        toast.error(resJson.message || 'Failed to delete stage', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'فشل حذف المرحلة' : 'Failed to delete stage'), { id: toastId });
       }
     } catch {
-      toast.error('Network error deleting stage from PostgreSQL', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال أثناء حذف المرحلة' : 'Network error deleting stage', { id: toastId });
     }
   };
 
@@ -485,7 +491,7 @@ export function usePipeline(token: string | null) {
     setIsAddStageOpen(false);
     stageForm.reset();
 
-    const toastId = toast.loading('Saving new stage to PostgreSQL...');
+    const toastId = toast.loading(isAr ? 'جاري إضافة المرحلة الجديدة...' : 'Saving new stage...');
 
     try {
       const res = await fetch(`${API_BASE_URL}/jobs/${selectedJobId}/stages`, {
@@ -501,16 +507,16 @@ export function usePipeline(token: string | null) {
       if (resJson.success) {
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
-        toast.success(`Created stage "${data.name}" and saved to PostgreSQL!`, { id: toastId });
+        toast.success(isAr ? `تم إنشاء المرحلة "${data.name}" بنجاح!` : `Created stage "${data.name}" successfully!`, { id: toastId });
       } else {
         // Revert on server error
         setStages((prev) => prev.filter((s) => s.id !== newStage.id));
-        toast.error(resJson.message || 'Error saving custom stage', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'خطأ في حفظ المرحلة' : 'Error saving custom stage'), { id: toastId });
       }
     } catch {
       // Revert on network error
       setStages((prev) => prev.filter((s) => s.id !== newStage.id));
-      toast.error('Network error saving stage to database', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال بالخادم أثناء حفظ المرحلة' : 'Network error saving stage to database', { id: toastId });
     }
   };
 
@@ -518,12 +524,12 @@ export function usePipeline(token: string | null) {
   const onConfirmRejection = async () => {
     if (!rejectingCandidate) return;
     if (!rejectionReason.trim()) {
-      toast.error('يرجى كتابة سبب الرفض احتراماً لوقت وجهد المتقدم');
+      toast.error(isAr ? 'يرجى كتابة سبب الرفض احتراماً لوقت وجهد المتقدم' : 'Please provide a rejection reason for candidate feedback');
       return;
     }
 
     setIsSubmittingRejection(true);
-    const toastId = toast.loading('جاري حفظ سبب الرفض وإرسال التغذية الراجعة للمتقدم...');
+    const toastId = toast.loading(isAr ? 'جاري حفظ سبب الرفض وإرسال التغذية الراجعة للمتقدم...' : 'Saving rejection feedback and notifying applicant...');
 
     try {
       const res = await fetch(`${API_BASE_URL}/candidates/${rejectingCandidate.id}/reject`, {
@@ -565,14 +571,14 @@ export function usePipeline(token: string | null) {
         }
 
         queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
-        toast.success(`تم استبعاد المتقدم وإرسال التغذية الراجعة إلى بريده الإلكتروني`, { id: toastId });
+        toast.success(isAr ? 'تم استبعاد المتقدم وإرسال التغذية الراجعة إلى بريده الإلكتروني' : 'Candidate rejected and feedback email sent successfully', { id: toastId });
         setRejectingCandidate(null);
         setRejectionReason('');
       } else {
-        toast.error(resJson.message || 'فشل حفظ سبب الرفض', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'فشل حفظ سبب الرفض' : 'Failed to save rejection feedback'), { id: toastId });
       }
     } catch {
-      toast.error('خطأ في الاتصال بالخادم', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال بالخادم' : 'Network error connecting to server', { id: toastId });
     } finally {
       setIsSubmittingRejection(false);
     }
@@ -580,7 +586,7 @@ export function usePipeline(token: string | null) {
 
   // Undo / Revert Rejection
   const handleUnrejectCandidate = async (candidate: Candidate) => {
-    const toastId = toast.loading(`جاري إلغاء استبعاد ${candidate.name}...`);
+    const toastId = toast.loading(isAr ? `جاري إلغاء استبعاد ${candidate.name}...` : `Reverting rejection for ${candidate.name}...`);
     try {
       const res = await fetch(`${API_BASE_URL}/candidates/${candidate.id}/unreject`, {
         method: 'POST',
@@ -617,12 +623,12 @@ export function usePipeline(token: string | null) {
         }
 
         queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
-        toast.success(`تم التراجع عن استبعاد ${candidate.name} وإعادته للمراحل النشطة بنجاح!`, { id: toastId });
+        toast.success(isAr ? `تم التراجع عن استبعاد ${candidate.name} وإعادته للمراحل النشطة بنجاح!` : `Reverted rejection for ${candidate.name} successfully!`, { id: toastId });
       } else {
-        toast.error(resJson.message || 'فشل التراجع عن الاستبعاد', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'فشل التراجع عن الاستبعاد' : 'Failed to revert rejection'), { id: toastId });
       }
     } catch {
-      toast.error('خطأ في الاتصال بالخادم أثناء إلغاء الاستبعاد', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال بالخادم أثناء إلغاء الاستبعاد' : 'Network error reverting rejection', { id: toastId });
     }
   };
 
@@ -632,7 +638,7 @@ export function usePipeline(token: string | null) {
     const candidateId = deletingCandidate.id;
     const candidateName = deletingCandidate.name;
     setIsDeletingCandidate(true);
-    const toastId = toast.loading(`جاري مسح المتقدم ${candidateName}...`);
+    const toastId = toast.loading(isAr ? `جاري مسح المتقدم ${candidateName}...` : `Deleting candidate ${candidateName}...`);
 
     try {
       const res = await fetch(`${API_BASE_URL}/candidates/${candidateId}`, {
@@ -651,12 +657,12 @@ export function usePipeline(token: string | null) {
         }
         setDeletingCandidate(null);
         queryClient.invalidateQueries({ queryKey: queryKeys.candidates.byJob(selectedJobId) });
-        toast.success(`تم حذف المتقدم "${candidateName}" بنجاح!`, { id: toastId });
+        toast.success(isAr ? `تم حذف المتقدم "${candidateName}" بنجاح!` : `Deleted candidate "${candidateName}" successfully!`, { id: toastId });
       } else {
-        toast.error(resJson.message || 'فشل حذف المتقدم', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'فشل حذف المتقدم' : 'Failed to delete candidate'), { id: toastId });
       }
     } catch {
-      toast.error('خطأ في الاتصال بالخادم أثناء حذف المتقدم', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال بالخادم أثناء حذف المتقدم' : 'Network error deleting candidate', { id: toastId });
     } finally {
       setIsDeletingCandidate(false);
     }
@@ -736,7 +742,7 @@ export function usePipeline(token: string | null) {
   const handleConfirmDeleteJob = async () => {
     if (!jobToDelete) return;
     setIsDeletingJob(true);
-    const toastId = toast.loading(`Deleting job "${jobToDelete.title}"...`);
+    const toastId = toast.loading(isAr ? `جاري حذف الوظيفة "${jobToDelete.title}"...` : `Deleting job "${jobToDelete.title}"...`);
 
     try {
       const res = await fetch(`${API_BASE_URL}/jobs/${jobToDelete.id}`, {
@@ -746,7 +752,7 @@ export function usePipeline(token: string | null) {
       const resJson = await res.json();
 
       if (resJson.success) {
-        toast.success(`Job "${jobToDelete.title}" deleted successfully!`, { id: toastId });
+        toast.success(isAr ? `تم حذف الوظيفة "${jobToDelete.title}" بنجاح!` : `Job "${jobToDelete.title}" deleted successfully!`, { id: toastId });
         localStorage.removeItem('ats_selected_job_id');
         setJobToDelete(null);
 
@@ -757,10 +763,10 @@ export function usePipeline(token: string | null) {
           fetchData();
         }
       } else {
-        toast.error(resJson.message || 'Failed to delete job', { id: toastId });
+        toast.error(resJson.message || (isAr ? 'فشل حذف الوظيفة' : 'Failed to delete job'), { id: toastId });
       }
     } catch {
-      toast.error('Network error while deleting job position', { id: toastId });
+      toast.error(isAr ? 'خطأ في الاتصال أثناء حذف الوظيفة' : 'Network error while deleting job position', { id: toastId });
     } finally {
       setIsDeletingJob(false);
     }
