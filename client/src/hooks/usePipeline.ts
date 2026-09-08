@@ -480,6 +480,11 @@ export function usePipeline(token: string | null) {
       },
     };
 
+    // Optimistic UI: Add stage and close modal immediately
+    setStages((prev) => [...prev, newStage]);
+    setIsAddStageOpen(false);
+    stageForm.reset();
+
     const toastId = toast.loading('Saving new stage to PostgreSQL...');
 
     try {
@@ -494,16 +499,17 @@ export function usePipeline(token: string | null) {
 
       const resJson = await res.json();
       if (resJson.success) {
-        setStages((prev) => [...prev, newStage]);
-        setIsAddStageOpen(false);
-        stageForm.reset();
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.public });
         queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
         toast.success(`Created stage "${data.name}" and saved to PostgreSQL!`, { id: toastId });
       } else {
+        // Revert on server error
+        setStages((prev) => prev.filter((s) => s.id !== newStage.id));
         toast.error(resJson.message || 'Error saving custom stage', { id: toastId });
       }
     } catch {
+      // Revert on network error
+      setStages((prev) => prev.filter((s) => s.id !== newStage.id));
       toast.error('Network error saving stage to database', { id: toastId });
     }
   };

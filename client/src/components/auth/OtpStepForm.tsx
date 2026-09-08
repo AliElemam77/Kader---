@@ -36,17 +36,32 @@ export const OtpStepForm: FC<OtpStepFormProps> = ({
       </div>
 
       {devOtp && (
-        <div className="p-3 rounded-2xl bg-[#35D6A4]/10 border border-dashed border-[#35D6A4]/30 text-xs text-[#35D6A4] text-center mb-4 space-y-1.5">
-          <div>
-            رمز التجربة السريع: <strong className="text-[#EEF1F7] text-sm font-mono tracking-widest">{devOtp}</strong>
+        <div className="p-4 rounded-2xl bg-[#35D6A4]/10 border border-dashed border-[#35D6A4]/40 text-center mb-4 space-y-2.5">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#35D6A4]/20 text-[#35D6A4] text-[10.5px] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#35D6A4] animate-pulse"></span>
+            <span>وضع المعاينة والـ CV (Dev / Demo Mode)</span>
           </div>
-          <button
-            type="button"
-            onClick={() => setValue('code', devOtp)}
-            className="px-3 py-1 rounded-lg bg-[#35D6A4]/20 hover:bg-[#35D6A4]/30 text-[#35D6A4] text-[11px] font-bold cursor-pointer transition-colors"
-          >
-            لصق الرمز تلقائياً ({devOtp})
-          </button>
+
+          <p className="text-xs text-[#8892A6]">
+            رمز التحقق الفوري لتقييم المنظومة بدون انتظار:
+          </p>
+
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-lg font-mono font-bold tracking-[0.3em] text-[#EEF1F7] bg-[#070A14] px-4 py-1.5 rounded-xl border border-white/10 shadow-inner">
+              {devOtp}
+            </span>
+            <button
+              type="button"
+              onClick={() => setValue('code', devOtp)}
+              className="px-3.5 py-1.5 rounded-xl bg-[#35D6A4] hover:bg-[#2ec293] text-[#070A14] text-xs font-bold cursor-pointer transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+            >
+              <span>لصق الكود فوراً</span>
+            </button>
+          </div>
+
+          <p className="text-[10px] text-[#8892A6] pt-1.5 border-t border-white/[0.06] leading-relaxed">
+            * تم إرسال الرمز أيضاً إلى بريدك. في بيئة العمل الحقيقية، الدخول مقتصر حصرياً على موظفي الـ HR المضافين بواسطة مدير النظام.
+          </p>
         </div>
       )}
 

@@ -24,6 +24,17 @@ export const EmailStepForm: FC<EmailStepFormProps> = ({
 
   return (
     <div>
+      {/* Portfolio / Dev Preview Notice */}
+      <div className="p-3 rounded-2xl bg-[#F5B23D]/10 border border-dashed border-[#F5B23D]/30 text-[11px] text-[#EEF1F7] mb-4 leading-relaxed text-center">
+        <div className="inline-flex items-center gap-1 text-[#F5B23D] font-bold text-xs mb-1">
+          <Sparkles size={13} />
+          <span>وضع العرض التجريبي للمقيّمين • Demo Mode</span>
+        </div>
+        <p className="text-[#8892A6] text-[10.5px]">
+          مرحباً بك! يمكنك إدخال أي بريد إلكتروني (أو اختيار حساب تجريبي بالأسفل) لاختبار لوحة التحكم فوراً بدون قيود، وسيظهر لك كود الـ OTP على الشاشة مباشرة.
+        </p>
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5">

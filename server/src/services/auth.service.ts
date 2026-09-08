@@ -32,29 +32,23 @@ export class AuthService {
     // Check if user is registered/invited
     let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
-    // For first-time local development ease, allow auto-creating admin if none exist
+    // Demo & Dev Mode: Auto-provision any reviewer or recruiter so they can test the ATS portal immediately
     if (!user) {
-      const usersCount = await prisma.user.count();
-      if (
-        usersCount === 0 ||
-        normalizedEmail.includes('admin') ||
-        normalizedEmail.includes('hire-ats') ||
-        normalizedEmail === 'alielemam515@gmail.com' ||
-        normalizedEmail === 'ali.elemam888@gmail.com'
-      ) {
-        const isRecruiter = normalizedEmail.includes('recruiter');
-        const role = isRecruiter ? 'RECRUITER' : 'HR_MANAGER';
-        user = await prisma.user.create({
-          data: {
-            email: normalizedEmail,
-            name: isRecruiter ? 'مسؤول توظيف (Recruiter)' : normalizedEmail.split('@')[0].toUpperCase(),
-            role,
-            status: 'ACTIVE',
-          },
-        });
-      } else {
-        throw new Error('This email is not authorized. Please ask your HR Manager for an invitation.');
-      }
+      const isRecruiter = normalizedEmail.includes('recruiter');
+      const role = isRecruiter ? 'RECRUITER' : 'HR_MANAGER';
+      const name = isRecruiter
+        ? 'مسؤول توظيف تجريبي (Recruiter Demo)'
+        : normalizedEmail.split('@')[0].toUpperCase();
+
+      user = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          name,
+          role,
+          status: 'ACTIVE',
+        },
+      });
+      console.log(`👤 Demo reviewer auto-provisioned: ${normalizedEmail} (${role})`);
     }
 
     if (user.status === 'DEACTIVATED') {
@@ -124,8 +118,8 @@ export class AuthService {
     return {
       success: true,
       message: 'A 6-digit verification code has been sent to your email.',
-      devOtp: process.env.NODE_ENV === 'development' ? otpCode : undefined,
-      devLink: process.env.NODE_ENV === 'development' ? loginPageUrl : undefined,
+      devOtp: otpCode, // Always returned for instant portfolio review & demo access
+      devLink: loginPageUrl,
     };
   }
 
