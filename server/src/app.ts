@@ -17,8 +17,23 @@ export function createApp(): Express {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // API Routes
+  // Root status endpoint
+  app.get('/', (_req, res) => {
+    res.json({
+      status: 'ok',
+      service: 'Kader ATS Backend API',
+      database: 'Supabase PostgreSQL',
+      endpoints: {
+        health: '/api/health',
+        jobs: '/api/jobs',
+        auth: '/api/auth',
+      },
+    });
+  });
+
+  // API Routes (mounted at both /api and root for seamless Vercel/serverless compatibility)
   app.use('/api', routes);
+  app.use('/', routes);
 
   // 404 Handler
   app.use((req, res) => {
