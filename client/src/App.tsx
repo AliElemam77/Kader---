@@ -20,11 +20,46 @@ export interface AuthUser {
   role: 'HR_MANAGER' | 'RECRUITER';
 }
 
+export type TabType = 'careers' | 'pipeline' | 'builder' | 'jobs' | 'team';
+
+function getInitialTab(): TabType {
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  const searchParams = new URLSearchParams(window.location.search);
+  const tabParam = searchParams.get('tab')?.toLowerCase();
+  const hash = window.location.hash.replace(/^#+/, '').toLowerCase();
+
+  const validTabs: TabType[] = ['careers', 'pipeline', 'builder', 'jobs', 'team'];
+
+  // 1. Check URL pathname (e.g. /pipeline, /jobs, /team, /builder, /careers)
+  if (validTabs.includes(path as TabType)) {
+    return path as TabType;
+  }
+
+  // 2. Check ?tab= query parameter
+  if (tabParam && validTabs.includes(tabParam as TabType)) {
+    return tabParam as TabType;
+  }
+
+  // 3. Check #hash
+  if (validTabs.includes(hash as TabType)) {
+    return hash as TabType;
+  }
+
+  // 4. If user has active session, restore last viewed tab from localStorage
+  const hasToken = !!localStorage.getItem('ats_token');
+  const savedTab = localStorage.getItem('ats_active_tab') as TabType;
+  if (hasToken && savedTab && validTabs.includes(savedTab)) {
+    return savedTab;
+  }
+
+  return 'careers';
+}
+
 export function App() {
   const { language, isRtl } = useLanguage();
   const isAr = language === 'ar';
 
-  const [activeTab, setActiveTab] = useState<'careers' | 'pipeline' | 'builder' | 'jobs' | 'team'>('careers');
+  const [activeTab, setActiveTab] = useState<TabType>(getInitialTab);
   const [isLoginOpen, setIsLoginOpen] = useState<boolean>(false);
   const [loginInitialEmail, setLoginInitialEmail] = useState<string | undefined>(undefined);
   const [isOutboxOpen, setIsOutboxOpen] = useState<boolean>(false);
@@ -37,6 +72,42 @@ export function App() {
       return null;
     }
   });
+
+  // Centralized tab navigation with URL history and localStorage synchronization
+  const handleTabChange = (tab: TabType, replace = false) => {
+    setActiveTab(tab);
+    localStorage.setItem('ats_active_tab', tab);
+    const targetPath = tab === 'careers' ? '/' : `/${tab}`;
+    if (window.location.pathname !== targetPath) {
+      if (replace) {
+        window.history.replaceState({ tab }, '', targetPath);
+      } else {
+        window.history.pushState({ tab }, '', targetPath);
+      }
+    }
+  };
+
+  // Sync browser URL bar with activeTab on mount and on tab changes
+  useEffect(() => {
+    const currentPath = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+    const expectedPath = activeTab === 'careers' ? '' : activeTab;
+    const targetPath = activeTab === 'careers' ? '/' : `/${activeTab}`;
+    if (currentPath !== expectedPath && !window.location.search && !window.location.hash) {
+      window.history.replaceState({ tab: activeTab }, '', targetPath);
+    }
+  }, [activeTab]);
+
+  // Handle browser Back / Forward navigation (popstate)
+  useEffect(() => {
+    const onPopState = () => {
+      const currentTab = getInitialTab();
+      setActiveTab(currentTab);
+      localStorage.setItem('ats_active_tab', currentTab);
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   // 1. Detect Direct Login Page Link & Email Pre-fill from Email
   useEffect(() => {
@@ -79,18 +150,28 @@ export function App() {
     }
   }, []);
 
+  // 3. Prompt login if user lands on an authenticated tab without a token
+  useEffect(() => {
+    const storedToken = localStorage.getItem('ats_token');
+    if (!storedToken && activeTab !== 'careers') {
+      setIsLoginOpen(true);
+    }
+  }, [activeTab]);
+
   const handleLoginSuccess = (newToken: string, newUser: AuthUser) => {
     localStorage.setItem('ats_token', newToken);
     localStorage.setItem('ats_user', JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
-    setActiveTab('pipeline');
+    const currentTab = getInitialTab();
+    const nextTab = currentTab !== 'careers' ? currentTab : 'pipeline';
+    handleTabChange(nextTab, true);
   };
 
   // Strict Role Guard: Ensure non-HR_MANAGER users can never access or remain on the Team tab
   useEffect(() => {
     if (user && user.role !== 'HR_MANAGER' && activeTab === 'team') {
-      setActiveTab('pipeline');
+      handleTabChange('pipeline', true);
       toast.warning(
         isAr
           ? 'تبويب إدارة الفريق وصلاحيات الأعضاء متاح فقط لمدير الموارد البشرية (HR Manager)'
@@ -102,10 +183,11 @@ export function App() {
   const handleLogout = (showToast = true) => {
     localStorage.removeItem('ats_token');
     localStorage.removeItem('ats_user');
+    localStorage.removeItem('ats_active_tab');
     queryClient.clear();
     setToken(null);
     setUser(null);
-    setActiveTab('careers');
+    handleTabChange('careers', true);
     if (showToast) {
       toast.info(isAr ? 'تم تسجيل الخروج من مساحة العمل بنجاح' : 'Signed out of workspace successfully');
     }
@@ -114,7 +196,7 @@ export function App() {
   const handleNavigateFromJobs = (tab: 'pipeline' | 'builder', jobId: string) => {
     localStorage.setItem('ats_selected_job_id', jobId);
     localStorage.setItem('ats_builder_job_id', jobId);
-    setActiveTab(tab);
+    handleTabChange(tab);
   };
 
   const isLoggedIn = user !== null && token !== null;
@@ -131,7 +213,7 @@ export function App() {
 
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
         user={user}
         onOpenLogin={() => {
           setLoginInitialEmail(undefined);
