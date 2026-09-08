@@ -142,19 +142,21 @@ export const Navbar: FC<NavbarProps> = ({
               )}
             </button>
 
-            {/* Team Tab */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('team')}
-              className={`relative flex items-center gap-1.5 py-5 text-sm font-semibold transition-colors cursor-pointer select-none ${
-                activeTab === 'team' ? 'text-white' : 'text-[#8892A6] hover:text-white'
-              }`}
-            >
-              <span>{isAr ? 'الفريق' : 'Team'}</span>
-              {activeTab === 'team' && (
-                <span className="absolute bottom-0 inset-x-0 h-[2.5px] bg-[#F5B23D] rounded-full shadow-sm shadow-[#F5B23D]/50" />
-              )}
-            </button>
+            {/* Team Tab: Strictly visible ONLY to HR_MANAGER */}
+            {user?.role === 'HR_MANAGER' && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('team')}
+                className={`relative flex items-center gap-1.5 py-5 text-sm font-semibold transition-colors cursor-pointer select-none ${
+                  activeTab === 'team' ? 'text-white' : 'text-[#8892A6] hover:text-white'
+                }`}
+              >
+                <span>{isAr ? 'الفريق' : 'Team'}</span>
+                {activeTab === 'team' && (
+                  <span className="absolute bottom-0 inset-x-0 h-[2.5px] bg-[#F5B23D] rounded-full shadow-sm shadow-[#F5B23D]/50" />
+                )}
+              </button>
+            )}
           </nav>
         ) : (
           /* Subtle brand tagline for public visitors */

@@ -22,7 +22,7 @@ export const InviteMemberCard: FC<InviteMemberCardProps> = ({ form, onSubmit }) 
         <h3 className="text-base font-bold text-[#EEF1F7]">دعوة عضو جديد للفريق</h3>
       </div>
       <p className="text-xs text-[#8892A6] mb-6 leading-relaxed">
-        سيتم إرسال إيميل ترحيبي رسمي للمنضم الجديد يحتوي على رابط الدخول السريع ورمز التحقق.
+        سيتم إرسال إيميل ترحيبي رسمي للمنضم الجديد يحتوي على رمز التحقق ورابط صفحة الدخول.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

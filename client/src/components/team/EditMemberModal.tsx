@@ -1,7 +1,8 @@
 import { type FC } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import { X, UserCheck, AlertCircle } from 'lucide-react';
+import { X, UserCheck, AlertCircle, Mail, User } from 'lucide-react';
 import type { TeamMember, EditFormValues } from '../../hooks/useTeam';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface EditMemberModalProps {
   editingMember: TeamMember | null;
@@ -16,6 +17,9 @@ export const EditMemberModal: FC<EditMemberModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { language } = useLanguage();
+  const isAr = language === 'ar';
+
   if (!editingMember) return null;
 
   const {
@@ -26,86 +30,133 @@ export const EditMemberModal: FC<EditMemberModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/80">
+      <div className="relative w-full max-w-md bg-[#0E1524] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/80">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+          className="absolute top-5 end-5 p-1.5 rounded-lg text-[#8892A6] hover:text-[#EEF1F7] hover:bg-[#151E31] transition-colors cursor-pointer"
         >
           <X size={20} />
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-            <UserCheck size={20} />
+          <div className="w-11 h-11 rounded-2xl bg-[#F5B23D]/10 border border-[#F5B23D]/25 flex items-center justify-center text-[#F5B23D]">
+            <UserCheck size={22} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">Edit Team Member</h3>
-            <p className="text-xs text-slate-400">{editingMember.email}</p>
+            <h3 className="text-lg font-bold text-[#EEF1F7]">
+              {isAr ? 'تعديل بيانات عضو الفريق' : 'Edit Team Member'}
+            </h3>
+            <p className="text-xs text-[#8892A6] font-mono">{editingMember.email}</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Full Name */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Full Name <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5">
+              {isAr ? 'الاسم بالكامل' : 'Full Name'} <span className="text-[#FF7A85]">*</span>
             </label>
-            <input
-              type="text"
-              {...register('name')}
-              className={`w-full px-3.5 py-2.5 bg-slate-950 border rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 transition-all ${
-                errors.name
-                  ? 'border-rose-500/60 focus:ring-rose-500/40'
-                  : 'border-slate-800 focus:ring-indigo-500 focus:border-transparent'
-              }`}
-            />
+            <div className="relative">
+              <User size={15} className="absolute inset-inline-start-3.5 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+              <input
+                type="text"
+                {...register('name')}
+                placeholder={isAr ? 'الاسم' : 'Name'}
+                className={`w-full ps-10 pe-3.5 py-2.5 bg-[#070A14] border rounded-xl text-sm text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none focus:ring-2 transition-all ${
+                  errors.name
+                    ? 'border-[#FF7A85] focus:ring-[#FF7A85]/30'
+                    : 'border-white/[0.12] focus:ring-[#F5B23D]/40 focus:border-[#F5B23D]'
+                }`}
+              />
+            </div>
             {errors.name && (
-              <p className="flex items-center gap-1 text-[11px] text-rose-400 mt-1">
+              <p className="flex items-center gap-1 text-[11px] text-[#FF7A85] mt-1">
                 <AlertCircle size={12} /> {errors.name.message}
               </p>
             )}
           </div>
 
+          {/* Email Address */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Role & Permissions <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5">
+              {isAr ? 'البريد الإلكتروني المؤسسي' : 'Work Email Address'} <span className="text-[#FF7A85]">*</span>
+            </label>
+            <div className="relative">
+              <Mail size={15} className="absolute inset-inline-start-3.5 top-1/2 -translate-y-1/2 text-[#8892A6]" />
+              <input
+                type="email"
+                {...register('email')}
+                placeholder="colleague@kader.sa"
+                className={`w-full ps-10 pe-3.5 py-2.5 bg-[#070A14] border rounded-xl text-sm text-[#EEF1F7] placeholder-[#5A6478] focus:outline-none focus:ring-2 transition-all ${
+                  errors.email
+                    ? 'border-[#FF7A85] focus:ring-[#FF7A85]/30'
+                    : 'border-white/[0.12] focus:ring-[#F5B23D]/40 focus:border-[#F5B23D]'
+                }`}
+              />
+            </div>
+            {errors.email && (
+              <p className="flex items-center gap-1 text-[11px] text-[#FF7A85] mt-1">
+                <AlertCircle size={12} /> {errors.email.message}
+              </p>
+            )}
+            <p className="text-[11px] text-[#5A6478] mt-1">
+              {isAr
+                ? 'تعديل البريد يحرر البريد القديم ويسمح باستخدامه لحساب آخر.'
+                : 'Updating the email frees up the old address for reassignment.'}
+            </p>
+          </div>
+
+          {/* Role & Permissions */}
+          <div>
+            <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5">
+              {isAr ? 'الدور الوظيفي والصلاحيات' : 'Role & Permissions'} <span className="text-[#FF7A85]">*</span>
             </label>
             <select
               {...register('role')}
-              className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full px-3.5 py-2.5 bg-[#070A14] border border-white/[0.12] rounded-xl text-xs text-[#EEF1F7] focus:outline-none focus:ring-2 focus:ring-[#F5B23D] cursor-pointer"
             >
-              <option value="RECRUITER">Recruiter</option>
-              <option value="HR_MANAGER">HR Manager</option>
+              <option value="RECRUITER">
+                {isAr
+                  ? 'مسؤول توظيف (Recruiter) — إدارة الوظائف والمسار والمقابلات'
+                  : 'Recruiter — Manage jobs, pipeline, and candidate interviews'}
+              </option>
+              <option value="HR_MANAGER">
+                {isAr
+                  ? 'مدير توظيف (HR Manager) — كامل الصلاحيات وإدارة الفريق'
+                  : 'HR Manager — Full administrative privileges & team management'}
+              </option>
             </select>
           </div>
 
+          {/* Account Status */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Account Status <span className="text-rose-400">*</span>
+            <label className="block text-xs font-semibold text-[#EEF1F7] mb-1.5">
+              {isAr ? 'حالة الحساب' : 'Account Status'} <span className="text-[#FF7A85]">*</span>
             </label>
             <select
               {...register('status')}
-              className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="w-full px-3.5 py-2.5 bg-[#070A14] border border-white/[0.12] rounded-xl text-xs text-[#EEF1F7] focus:outline-none focus:ring-2 focus:ring-[#F5B23D] cursor-pointer"
             >
-              <option value="ACTIVE">Active (Can log in & manage)</option>
-              <option value="INVITED">Invited (Pending login)</option>
-              <option value="DEACTIVATED">Deactivated (Access suspended)</option>
+              <option value="ACTIVE">{isAr ? 'نشط (مسموح بالدخول والعمل)' : 'Active (Access enabled)'}</option>
+              <option value="INVITED">{isAr ? 'تمت الدعوة (بانتظار تسجيل الدخول)' : 'Invited (Pending login)'}</option>
+              <option value="DEACTIVATED">{isAr ? 'معطل (إيقاف صلاحيات الدخول)' : 'Deactivated (Suspended)'}</option>
             </select>
           </div>
 
-          <div className="flex gap-3 pt-3">
+          <div className="flex items-center gap-3 pt-3">
             <button
               type="button"
               onClick={onClose}
-              className="w-1/2 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+              className="btn-sec w-1/2 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
             >
-              Cancel
+              {isAr ? 'إلغاء' : 'Cancel'}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-1/2 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition-all cursor-pointer disabled:opacity-50"
+              className="btn-pri w-1/2 py-2.5 rounded-xl text-xs font-semibold cursor-pointer disabled:opacity-50"
             >
-              Save Changes
+              {isSubmitting ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ التعديلات' : 'Save Changes')}
             </button>
           </div>
         </form>

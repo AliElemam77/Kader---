@@ -119,10 +119,10 @@ export function App() {
           <FormBuilderPreview />
         ) : activeTab === 'jobs' ? (
           <JobsPreview onNavigate={handleNavigateFromJobs} />
-        ) : activeTab === 'team' && token ? (
+        ) : activeTab === 'team' && token && user?.role === 'HR_MANAGER' ? (
           <TeamManagement token={token} />
         ) : (
-          <PublicCareers />
+          <PipelinePreview token={token} />
         )}
       </main>
 

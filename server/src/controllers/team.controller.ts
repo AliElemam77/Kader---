@@ -39,9 +39,9 @@ export class TeamController {
   static async updateMember(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const id = String(req.params.id);
-      const { name, role, status } = req.body;
+      const { name, email, role, status } = req.body;
 
-      const updated = await TeamService.updateMember(id, { name, role, status });
+      const updated = await TeamService.updateMember(id, { name, email, role, status });
       sendSuccess(res, updated, 'Member updated successfully');
     } catch (error) {
       sendError(res, (error as Error).message, 400);

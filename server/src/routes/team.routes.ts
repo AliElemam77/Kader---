@@ -4,15 +4,13 @@ import { requireAuth, requireRole } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-// All team routes require authentication
+// All team management routes are strictly restricted to HR_MANAGER
 router.use(requireAuth);
+router.use(requireRole('HR_MANAGER'));
 
-// All team members can view the team roster
 router.get('/', TeamController.listTeam);
-
-// Only HR_MANAGER can invite or modify team members
-router.post('/invite', requireRole('HR_MANAGER'), TeamController.inviteMember);
-router.patch('/:id', requireRole('HR_MANAGER'), TeamController.updateMember);
-router.delete('/:id', requireRole('HR_MANAGER'), TeamController.deleteMember);
+router.post('/invite', TeamController.inviteMember);
+router.patch('/:id', TeamController.updateMember);
+router.delete('/:id', TeamController.deleteMember);
 
 export default router;

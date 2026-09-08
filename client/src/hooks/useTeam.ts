@@ -24,6 +24,7 @@ export type InviteFormValues = z.infer<typeof inviteSchema>;
 
 export const editSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Please enter a valid work email address'),
   role: z.enum(['HR_MANAGER', 'RECRUITER']),
   status: z.enum(['ACTIVE', 'INVITED', 'DEACTIVATED']),
 });
@@ -103,6 +104,7 @@ export function useTeam(token: string) {
   const handleOpenEdit = (member: TeamMember) => {
     setEditingMember(member);
     editForm.setValue('name', member.name);
+    editForm.setValue('email', member.email);
     editForm.setValue('role', member.role);
     editForm.setValue('status', member.status);
   };

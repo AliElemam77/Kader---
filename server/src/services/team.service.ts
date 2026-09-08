@@ -24,16 +24,17 @@ export class TeamService {
     });
   }
 
-  // Invite a new colleague to the HR Workspace
+  // Invite a new colleague to the HR Workspace (Strict Email Uniqueness)
   static async inviteMember(dto: InviteMemberDto) {
     const normalizedEmail = dto.email.trim().toLowerCase();
 
+    // Verify email is not already used by another team member
     const existing = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
     if (existing) {
-      throw new Error(`A team member with email "${normalizedEmail}" already exists.`);
+      throw new Error(`هذا البريد الإلكتروني مسجل بالفعل كعضو في الفريق. A team member with email "${normalizedEmail}" already exists.`);
     }
 
     const newUser = await prisma.user.create({
@@ -45,7 +46,7 @@ export class TeamService {
       },
     });
 
-    // Generate onboarding OTP + Magic Link email
+    // Generate onboarding OTP verification code & send invitation email
     const accessResponse = await AuthService.requestAccess(normalizedEmail);
 
     return {
@@ -54,11 +55,27 @@ export class TeamService {
     };
   }
 
-  // Update team member name, role, or status
+  // Update team member (name, email, role, or status)
   static async updateMember(
     userId: string,
-    data: { name?: string; role?: Role; status?: 'ACTIVE' | 'INVITED' | 'DEACTIVATED' }
+    data: { name?: string; email?: string; role?: Role; status?: 'ACTIVE' | 'INVITED' | 'DEACTIVATED' }
   ) {
+    if (data.email) {
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const existing = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+      });
+
+      if (existing && existing.id !== userId) {
+        throw new Error(`هذا البريد الإلكتروني مسجل بالفعل لعضو آخر في الفريق. Email "${normalizedEmail}" is already in use by another team member.`);
+      }
+      data.email = normalizedEmail;
+    }
+
+    if (data.name) {
+      data.name = data.name.trim();
+    }
+
     return prisma.user.update({
       where: { id: userId },
       data,
@@ -72,13 +89,19 @@ export class TeamService {
     });
   }
 
-  // Delete team member (prevent self-deletion)
+  // Delete team member (frees up the email completely so it can be re-invited if needed)
   static async deleteMember(userId: string, currentAdminId?: string) {
     if (currentAdminId && userId === currentAdminId) {
-      throw new Error('You cannot remove your own administrator account.');
+      throw new Error('لا يمكنك حذف حسابك الإداري الخاص. You cannot remove your own administrator account.');
     }
 
-    // Delete associated verification codes first (or cascade)
+    // Nullify createdById in jobs to prevent foreign key errors
+    await prisma.job.updateMany({
+      where: { createdById: userId },
+      data: { createdById: null },
+    });
+
+    // Delete associated verification codes first
     await prisma.verificationCode.deleteMany({ where: { userId } });
 
     return prisma.user.delete({
